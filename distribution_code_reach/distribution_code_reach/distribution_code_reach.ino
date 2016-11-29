@@ -56,9 +56,12 @@ const Color AQUA(0, 7, 7);
 
 // Abstract class for objects that are moveable
 class Moveable {
+
 	public:
+
 		explicit Moveable(bool move):can_move(move), 
 									last_action_time(0){};
+
 		void set_can_move(bool move) {
 			this->can_move = move;
 		}
@@ -67,14 +70,22 @@ class Moveable {
 			this->elapsed = 1000 / speed;
 		}
 
-		bool ready_to_act() {
+		void set_initial_action_time(int time) {
+			this->last_action_time = time;
+		}
+
+		bool ready_to_act() const {
 			return millis() - last_action_time > this->elapsed;
 		}
 
-		virtual void _move() {
+		void timestamp() {
 			this->last_action_time = millis();
 		}
+
+		virtual void move() = 0;
+
 	private:
+
 		bool can_move;
 		int last_action_time;
 		int elapsed; // moves / sec
@@ -82,30 +93,276 @@ class Moveable {
 
 // Abstract class for objects that are drawable
 class Drawable {
+
 	public:
+
 		explicit Drawable(int origin_x = 0, 
 						  int origin_y = 0):x(origin_x)
 										   ,y(origin_y){};
+
 		void set_x(int x) {
 			this->x = x;
 		}
-		int get_x() {
+
+		int get_x() const {
 			return this->x;
 		}
+
 		void set_y(int y) {
 			this->y = y;
 		}
-		int get_y() {
+
+		int get_y() const {
 			return this->y;
 		}
+
+		void initialize(int x_arg, int y_arg) {
+			this->x = x_arg;
+			this->y = y_arg;
+		}
+
 		virtual void draw() = 0;
 		virtual void erase() = 0;
+
+	protected:
+
+		void draw_with_color(int x, int y, Color color) {
+
+			matrix.drawPixel(x, y, color.to_333());
+
+		}
+
 	private:
+
 		int x;
 		int y;
+
 };
 
+// Defender
+class Defender: public Moveable, public Drawable {
 
+	public:
+
+		Defender(bool move = false): Moveable(move), Drawable() {}
+
+		void move() {
+			// record timestamp
+			Moveable::timestamp();
+			// TODO: 
+		}
+
+		void draw() {
+			// TODO:
+		}
+
+		void erase() {
+			// TODO: 
+		}
+
+		bool has_bounded() {
+			// TODO:
+		}
+
+};
+
+// Net
+class Net : public Moveable, public Drawable {
+
+	public: 
+
+		Net(bool move = false): Moveable(move), Drawable(move) {}
+
+		void miss() {
+			// TODO::
+			// selectively turn one LED off
+		}
+
+		void move() {
+			// record timestamp
+			Moveable::timestamp();
+			// TODO: 
+		}
+
+		void draw() {
+			// TODO:
+		}
+
+		void erase() {
+			// TODO:
+		}
+
+		
+}
+
+// Soccer ball
+class SoccerBall : public Moveable, public Drawable {
+
+	public:
+
+		SoccerBall(bool move = true): Moveable(move), Drawable() {}
+
+		bool has_been_shot() const {
+			// TODO:
+		}
+
+		void shoot(int x_arg, int y_arg) {
+			// TODO:
+		}
+
+		bool has_hit_defender(Defender& defender) {
+			// TODO:
+		}
+
+		bool has_hit_net(Net& net){
+			// TODO:
+		}
+
+		void move() {
+			// record timestamp
+			Moveable::timestamp();
+			// TODO:
+		}
+
+		void erase() {
+			// TODO:
+		}
+
+		void draw() {
+			// TODO:
+		}
+
+	private:
+
+		bool shot;
+
+};
+
+// Player
+class Player : public Moveable, public Drawable {
+
+	public:
+
+		Player(bool move = true): Moveable(move), Drawable() {}
+
+		void allow_unlimited_shots() {
+			// TODO:
+		}
+
+		void fail_to_goal(){
+			// TODO
+		}
+
+		bool has_collided_with(Defender& defender) {
+			// TODO:
+		}
+
+		void move() {
+			// record timestamp
+			Moveable::timestamp();
+			// TODO:
+		}
+
+		void erase() {
+			// TODO:
+		}
+
+		void draw() {
+			// TODO:
+		}
+
+	private:
+		bool unlimited_shots = true;
+		int num_shots = 3;
+
+};
+
+// Game
+class Game {
+
+	public:
+
+		Game() {
+			// initialize level
+			level = 0;
+		}
+
+		void setup() {
+			// initialize timestamp for all objects
+			this->initialize_time_counter();
+			// initialize move status for all objects
+			this->initialize_move_status();
+
+			// TODO:
+			// initialize matrix etc...
+		}
+
+		void loop(int potentiometer_value, bool button_pressed) {
+
+			// TODO:
+
+		}
+
+	private:
+
+		int level;
+
+		Player player;
+		SoccerBall ball;
+		Defender defenders[NUM_DEFENDERS];
+
+		void initialize_time_counter() {
+			int time = millis();
+			// for player
+			this->player->set_initial_action_time(time);
+			// for soccer ball
+			this->ball->set_initial_action_time(time);
+			// for all defenders
+			for(int i = 0; i < NUM_DEFENDERS; i++){
+			    this->defenders[i]->set_initial_action_time(time);
+			}
+
+		}
+
+		void initialize_move_status() {
+
+			// TODO:
+			// change move status and speed
+			// of objects based on level
+
+		}
+
+		void draw_net() {
+
+			// TODO:
+
+		}
+
+		void draw_defenders() {
+
+			// TODO:
+
+		}
+
+		void draw_player() {
+
+			// TODO:
+
+		}
+
+		void reset_level() {
+
+			// TODO:
+
+		}
+
+		void next_level() {
+
+			// TODO:
+
+		}
+
+};
 
 // Arduino's native setup function
 // runs only once
