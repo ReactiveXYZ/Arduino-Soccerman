@@ -57,29 +57,45 @@ const Color AQUA(0, 7, 7);
 // Abstract class for objects that are moveable
 class Moveable {
 	public:
-		explicit Moveable(bool move):can_move(move);
-		void set_can_move(bool can_move) {
-			this->can_move = can_move;
+		explicit Moveable(bool move):can_move(move), 
+									last_action_time(0){};
+		void set_can_move(bool move) {
+			this->can_move = move;
 		}
-		virtual void move() = 0;
+
+		void set_speed(int speed) {
+			this->elapsed = 1000 / speed;
+		}
+
+		bool ready_to_act() {
+			return millis() - last_action_time > this->elapsed;
+		}
+
+		virtual void _move() {
+			this->last_action_time = millis();
+		}
 	private:
-		bool can_move = false;
+		bool can_move;
+		int last_action_time;
+		int elapsed; // moves / sec
 };
 
 // Abstract class for objects that are drawable
 class Drawable {
 	public:
-		explicit Drawable(int origin_x, int origin_y);
+		explicit Drawable(int origin_x = 0, 
+						  int origin_y = 0):x(origin_x)
+										   ,y(origin_y){};
 		void set_x(int x) {
 			this->x = x;
 		}
-		void get_x() {
+		int get_x() {
 			return this->x;
 		}
 		void set_y(int y) {
 			this->y = y;
 		}
-		void get_y() {
+		int get_y() {
 			return this->y;
 		}
 		virtual void draw() = 0;
