@@ -24,23 +24,23 @@ RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
 
 // define Color classes and common colors
 class Color {
-  public:
-    int red;
-    int green;
-    int blue;
-    Color() {
-      red = 0;
-      green = 0;
-      blue = 0;
-    }
-    Color(int r, int g, int b) {
-      red = r;
-      green = g;
-      blue = b;
-    }
-    uint16_t to_333() const {
-      return matrix.Color333(red, green, blue);
-    }
+  	public:
+    	int red;
+    	int green;
+    	int blue;
+	    Color() {
+	    	red = 0;
+	      	green = 0;
+	      	blue = 0;
+	    }
+	    Color(int r, int g, int b) {
+	      	red = r;
+	      	green = g;
+	      	blue = b;
+	    }
+	    uint16_t to_333() const {
+	      	return matrix.Color333(red, green, blue);
+	    }
 };
 
 const Color BLACK(0, 0, 0);
@@ -53,6 +53,26 @@ const Color PURPLE(7, 0, 7);
 const Color WHITE(7, 7, 7);
 const Color LIME(4, 7, 0);
 const Color AQUA(0, 7, 7);
+
+// Message printer class
+class Print {
+
+	public:
+
+		void level() {
+			// TODO
+		}
+
+		void remaining_shots() {
+			// TODO
+		}
+
+		void game_over() {
+			// TODO
+		}
+
+};
+
 
 // Abstract class for objects that are moveable
 class Moveable {
@@ -307,6 +327,7 @@ class Game {
 
 		int level;
 
+		Print print;
 		Player player;
 		SoccerBall ball;
 		Defender defenders[NUM_DEFENDERS];
@@ -362,11 +383,26 @@ class Game {
 
 		}
 
+		void game_over() {
+
+			// TODO:
+
+		}
+
 };
+
+// Initialize Game instance
+Game game;
 
 // Arduino's native setup function
 // runs only once
 void setup() {
+
+	Serial.begin(9600);
+  	pinMode(BUTTON_PIN_NUMBER, INPUT);
+  	matrix.begin();
+
+  	game.setup();
 
 }
 
@@ -374,4 +410,9 @@ void setup() {
 // runs millions of times per second
 void loop() {
 
+	int potentiometer_value = analogRead(POTENTIOMETER_PIN_NUMBER);
+
+  	bool button_pressed = (digitalRead(BUTTON_PIN_NUMBER) == HIGH);
+
+  	game.loop(potentiometer_value, button_pressed);
 }
