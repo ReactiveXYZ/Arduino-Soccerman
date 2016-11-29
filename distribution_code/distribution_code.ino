@@ -332,7 +332,8 @@ class Game {
 
       // print lives
       print_lives(player.get_lives());
-
+      delay(1500);
+      
       // go to next level (which is 1st level)
       next_level();
 
@@ -480,6 +481,7 @@ class Game {
 
   private:
     int level;
+    
     int time;
     int invaderTime;
     int cannonballTime;
