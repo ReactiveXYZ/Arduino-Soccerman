@@ -186,14 +186,14 @@ class Cannonball {
   public:
     Cannonball() {
       x = 0;
-      y = 0;
+      y = 30; // make y out of bound
       fired = false;
     }
 
     // resets private data members to initial values
     void reset() {
       x = 0;
-      y = 0;
+      y = 30;
       fired = false;
     }
 
@@ -227,7 +227,7 @@ class Cannonball {
     }
     // resets private data members to initial values
     void hit() {
-      fired = false;
+      reset();
     }
 
     // draws the Cannonball, if it is fired
@@ -338,6 +338,9 @@ class Game {
 
       // log time
       time = millis();
+      invaderTime = time;
+      cannonballTime = time;
+      collisionTime = time;
     }
 
     // displays and runs Space Invaders!
@@ -368,7 +371,7 @@ class Game {
       if (!level_cleared()) {
         
         // save time for calc interval
-        int elapsed = millis() - time;
+        int currentTime = millis();
 
         // detect player movement
         int player_center = potentiometer_value / 32;
@@ -376,33 +379,41 @@ class Game {
         player.erase();
         player.set_x(player_center);
         player.draw();
-        
-        // Fire/Move cannonballs
-        // frequency: 0.4s/check
-        if (elapsed > 400) {
 
-          if (button_pressed) {
+        // detect button press
+        if (button_pressed) {
             // fire cannonball with respect to player's current position
             ball.erase();
             ball.fire(player.get_x(), player.get_y() - 2);
-            ball.draw();
-          }
-          
-          if (ball.has_been_fired()) {
-            ball.erase();
-            ball.move();
-            ball.draw();
+        }
 
-            for (int i = 0; i < get_num_enemies_for_level(); i ++) {
+        // Detect invader collisions
+        // frequency: 0.05s/check
+        if (currentTime - collisionTime > 50) {
 
-              // check collision between ball and invader
-              if (ball_has_hit(enemies[i])) {
+          for (int i = 0; i < get_num_enemies_for_level(); i++ ) {
 
-                // indicate ball is hit
-                ball.hit();
+            // check collision between invader and player || invader touches bound
+            if (player_has_collided(enemies[i]) || invader_has_bounded(enemies[i])) {
+
+              // decrease player's life
+              player.die();
+
+              // reset level
+              reset_level();
+
+              break;
+
+            }
+
+            // check collision between ball and invader
+            if (ball_has_hit(enemies[i])) {
+
                 // remove the cannnonball
                 ball.erase();
-
+                // indicate ball is hit
+                ball.hit();
+                
                 // downgrade/erase enemies
                 enemies[i].hit();
 
@@ -412,57 +423,36 @@ class Game {
 
                 }
 
-              }
-
             }
+
+          }
+
+          collisionTime = currentTime;
+        }
+        
+        // Move cannonballs
+        // frequency: 0.1s/move
+        if (currentTime - cannonballTime > 100) {
+          
+          if (ball.has_been_fired()) {
+            
+              ball.erase();
+              ball.move();
+              ball.draw();
 
           } else {
 
-            ball.erase();
-
+              ball.erase();
+               
           }
 
-        }
-
-        // Detect invader collisions
-        // frequency: 0.5s/check
-        if (elapsed > 500) {
-
-          for (int i = 0; i < get_num_enemies_for_level(); i++ ) {
-
-            // check collision between invader and player
-            if (player_has_collided(enemies[i])) {
-
-              // decrease player's life
-              player.die();
-
-              // reset level
-              reset_level();
-
-              break;
-
-            }
-
-            // check collision between invaders and bound
-            if (invader_has_bounded(enemies[i])) {
-
-              // decrease player's life
-              player.die();
-
-              // reset level
-              reset_level();
-
-              break;
-
-            }
-
-          }
+          cannonballTime = currentTime;
 
         }
           
         // Move invaders
         // frequency: 1.0s/move
-        if (elapsed > 1500) {
+        if (currentTime - invaderTime > 1000) {
 
           for (int i = 0; i < get_num_enemies_for_level(); i++) {
 
@@ -473,10 +463,11 @@ class Game {
               enemies[i].draw();
             }
           }
+          // save time for future comparison
+          invaderTime = currentTime;
         }
         
-        // save time for future comparison
-        time = millis();
+        
         
       }else {
 
@@ -490,6 +481,10 @@ class Game {
   private:
     int level;
     int time;
+    int invaderTime;
+    int cannonballTime;
+    int collisionTime; 
+    
     Player player;
     Cannonball ball;
     Invader enemies[NUM_ENEMIES];
@@ -656,6 +651,8 @@ bool ball_has_hit(Invader& invader) {
 
     if (invader.get_strength() > 0) {
 
+      Serial.println("shot");
+      
       return true;
 
     }
@@ -668,22 +665,33 @@ bool ball_has_hit(Invader& invader) {
 
 bool player_has_collided(Invader& invader) {
 
-  // check if coordinates fall into collision range
+  // when the origin of player touches invader
   if (
-    (player.get_y() <= invader.get_y() - 1) &&
-     (player.get_y() >= invader.get_y() - 4)
-    &&
+    (player.get_y() == invader.get_y()) &&
     (player.get_x() >= invader.get_x() - 1) &&
-     (player.get_x() <= invader.get_x() + 4)
+    (player.get_x() <= invader.get_x() + 4)
   ) {
 
     if (invader.get_strength() > 0) {
-
+      Serial.println("Type 1 collision");
       return true;
 
     }
 
+  } 
+  // when the player's top touches the invader
+  else if (
+    (player.get_x() == invader.get_x() ||
+    player.get_x() == invader.get_x() + 3) &&
+    (player.get_y() - 1 == invader.get_y())
+  ){
+    if (invader.get_strength() > 0) {
+      Serial.println("type 2 collision");
+      return true;
+
+    }
   }
+  
 
   return false;
 
@@ -693,7 +701,10 @@ bool invader_has_bounded(Invader& invader) {
 
   // check if y coordinate has reach bottom
   // which is 31
-  return invader.get_y() == 31;
+  if (invader.get_y() == 15){
+    Serial.println("bounded");
+  }
+  return invader.get_y() == 15;
 }
 
 bool waiting_for_dispatch(int index) {
@@ -787,6 +798,7 @@ void end_game() {
 
   // print game over
   game_over();
+  delay(1500);
 }
 };
 
