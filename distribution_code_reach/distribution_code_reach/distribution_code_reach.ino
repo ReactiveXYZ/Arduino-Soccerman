@@ -54,6 +54,43 @@ const Color WHITE(7, 7, 7);
 const Color LIME(4, 7, 0);
 const Color AQUA(0, 7, 7);
 
+// Abstract class for objects that are moveable
+class Moveable {
+	public:
+		explicit Moveable(bool move):can_move(move);
+		void set_can_move(bool can_move) {
+			this->can_move = can_move;
+		}
+		virtual void move() = 0;
+	private:
+		bool can_move = false;
+};
+
+// Abstract class for objects that are drawable
+class Drawable {
+	public:
+		explicit Drawable(int origin_x, int origin_y);
+		void set_x(int x) {
+			this->x = x;
+		}
+		void get_x() {
+			return this->x;
+		}
+		void set_y(int y) {
+			this->y = y;
+		}
+		void get_y() {
+			return this->y;
+		}
+		virtual void draw() = 0;
+		virtual void erase() = 0;
+	private:
+		int x;
+		int y;
+};
+
+
+
 // Arduino's native setup function
 // runs only once
 void setup() {
