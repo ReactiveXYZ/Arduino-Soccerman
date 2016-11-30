@@ -427,10 +427,16 @@ class Game {
               if (enemies[i].get_strength() < 1) {
                 enemies[i].erase();
               }
+
               // remove the cannnonball
               ball.erase();
               // indicate ball is hit
               ball.hit();
+
+              // redraw enemy if clashed
+              if (enemies[i].get_strength() > 0) {
+                enemies[i].draw();
+              }
               
             }
           }
@@ -653,8 +659,6 @@ class Game {
        
 
         if (invader.get_strength() > 0) {
-
-          Serial.println("shot");
           
           return true;
 
@@ -674,7 +678,7 @@ class Game {
           player.get_x() <= invader.get_x() + 4) {
 
         if (invader.get_strength() > 0) {
-          Serial.println("Type 1 collision");
+
           return true;
 
         }
@@ -686,7 +690,7 @@ class Game {
                player.get_y() - 1 == invader.get_y()) {
 
         if (invader.get_strength() > 0) {
-          Serial.println("type 2 collision");
+
           return true;
 
         }
@@ -701,9 +705,7 @@ class Game {
 
       // check if y coordinate has reach bottom
       // which is 31
-      if (invader.get_y() == 15) {
-        Serial.println("bounded");
-      }
+      
       return invader.get_y() == 15;
     }
 
