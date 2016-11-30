@@ -357,10 +357,6 @@ class Game {
     void setup() {
       // set entire screen to black
       matrix.fillScreen(BLACK.to_333());
-
-      // print lives
-      print_lives(player.get_lives());
-      delay(1500);
       
       // go to next level (which is 1st level)
       next_level();
@@ -751,6 +747,13 @@ class Game {
 
     // set up a level
     void reset_level() {
+      // print messages
+      print_lives(player.get_lives());
+      delay(1500);
+      matrix.fillScreen(BLACK.to_333())
+      print_level(level);
+      delay(1500);
+      matrix.fillScreen(BLACK.to_333());
 
       // draw the player in the middle
       player.erase();
@@ -765,13 +768,6 @@ class Game {
 
       // increment level
       ++level;
-
-      // clear board
-      matrix.fillScreen(BLACK.to_333());
-
-      // print next level
-      print_level(level);
-      delay(1500);
 
       // clear board
       matrix.fillScreen(BLACK.to_333());
