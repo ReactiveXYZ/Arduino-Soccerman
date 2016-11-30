@@ -647,7 +647,7 @@ class Game {
 
       // check if coordinates falls into collision range
       if (ball.get_y() <= invader.get_y() &&
-          ball.get_y() >= invader.get_y() - 4 &&
+          ball.get_y() >= invader.get_y() - 3 &&
           ball.get_x() >= invader.get_x() &&
           ball.get_x() <= invader.get_x() + 3) {
        
