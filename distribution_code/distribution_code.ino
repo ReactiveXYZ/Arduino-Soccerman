@@ -747,15 +747,19 @@ class Game {
 
     // set up a level
     void reset_level() {
-      // clear board
-      matrix.fillScreen(BLACK.to_333());
-      // print messages
-      print_lives(player.get_lives());
-      delay(1500);
-      matrix.fillScreen(BLACK.to_333());
-      print_level(level);
-      delay(1500);
-      matrix.fillScreen(BLACK.to_333());
+      
+      if (player.get_lives() > 0){
+        // clear board
+        matrix.fillScreen(BLACK.to_333());
+        // print messages
+        print_lives(player.get_lives());
+        delay(1500);
+        matrix.fillScreen(BLACK.to_333());
+        print_level(level);
+        delay(1500);
+        matrix.fillScreen(BLACK.to_333());
+      }
+      
 
       // draw the player in the middle
       player.erase();
