@@ -649,7 +649,7 @@ class Game {
       if (ball.get_y() <= invader.get_y() &&
           ball.get_y() >= invader.get_y() - 4 &&
           ball.get_x() >= invader.get_x() &&
-          ball.get_x() <= invader.get_x() + 4) {
+          ball.get_x() <= invader.get_x() + 3) {
        
 
         if (invader.get_strength() > 0) {
