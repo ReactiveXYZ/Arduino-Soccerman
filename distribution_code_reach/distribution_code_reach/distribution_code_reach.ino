@@ -55,19 +55,19 @@ const Color LIME(4, 7, 0);
 const Color AQUA(0, 7, 7);
 
 // Message printer class
-class Print {
+class Printer {
 
 	public:
 
-		void level() {
+		void print_level() {
 			// TODO
 		}
 
-		void remaining_shots() {
+		void print_remaining_shots() {
 			// TODO
 		}
 
-		void game_over() {
+		void print_game_over() {
 			// TODO
 		}
 
@@ -213,7 +213,7 @@ class Net : public Moveable, public Drawable {
 		}
 
 		
-}
+};
 
 // Soccer ball
 class SoccerBall : public Moveable, public Drawable {
@@ -327,7 +327,7 @@ class Game {
 
 		int level;
 
-		Print print;
+		Printer printer;
 		Player player;
 		SoccerBall ball;
 		Defender defenders[NUM_DEFENDERS];
@@ -335,12 +335,12 @@ class Game {
 		void initialize_time_counter() {
 			int time = millis();
 			// for player
-			this->player->set_initial_action_time(time);
+			this->player.set_initial_action_time(time);
 			// for soccer ball
-			this->ball->set_initial_action_time(time);
+			this->ball.set_initial_action_time(time);
 			// for all defenders
 			for(int i = 0; i < NUM_DEFENDERS; i++){
-			    this->defenders[i]->set_initial_action_time(time);
+			    this->defenders[i].set_initial_action_time(time);
 			}
 
 		}
