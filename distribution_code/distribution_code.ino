@@ -400,7 +400,7 @@ class Game {
         if (button_pressed && !ball.has_been_fired()) {
             // fire cannonball with respect to player's current position
             ball.erase();
-            ball.fire(player.get_x(), player.get_y() - 2);
+            ball.fire(player.get_x(), player.get_y());
         }
 
         // Detect invader collisions
@@ -747,10 +747,12 @@ class Game {
 
     // set up a level
     void reset_level() {
+      // clear board
+      matrix.fillScreen(BLACK.to_333());
       // print messages
       print_lives(player.get_lives());
       delay(1500);
-      matrix.fillScreen(BLACK.to_333())
+      matrix.fillScreen(BLACK.to_333());
       print_level(level);
       delay(1500);
       matrix.fillScreen(BLACK.to_333());
@@ -783,7 +785,7 @@ class Game {
       level = 0;
       time = 0;
       player = Player();
-
+      ball = Cannonball();
       // resetup
       setup();
 
