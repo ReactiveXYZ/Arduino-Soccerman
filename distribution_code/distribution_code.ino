@@ -422,15 +422,16 @@ class Game {
 
             // check collision between ball and invader
             if (ball_has_hit(enemies[i])) {
+              // downgrade/erase enemies
+              enemies[i].hit();
+              if (enemies[i].get_strength() < 1) {
+                enemies[i].erase();
+              }
               // remove the cannnonball
-                ball.erase();
-                // indicate ball is hit
-                ball.hit();
-                // downgrade/erase enemies
-                enemies[i].hit();
-                if (enemies[i].get_strength() < 1) {
-                  enemies[i].erase();
-                }
+              ball.erase();
+              // indicate ball is hit
+              ball.hit();
+              
             }
           }
           collisionTime = currentTime;
