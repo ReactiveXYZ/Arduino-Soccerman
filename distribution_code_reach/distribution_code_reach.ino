@@ -59,15 +59,15 @@ class Printer {
 
 	public:
 
-		void print_level() {
+		void level() {
 			// TODO
 		}
 
-		void print_remaining_shots() {
+		void remaining_shots() {
 			// TODO
 		}
 
-		void print_game_over() {
+		void game_over() {
 			// TODO
 		}
 
@@ -87,7 +87,7 @@ class Moveable {
 		}
 
 		void set_speed(int speed) {
-			this->elapsed = 1000 / speed;
+			this->cool_down = 1000 / speed;
 		}
 
 		void set_initial_action_time(int time) {
@@ -95,7 +95,7 @@ class Moveable {
 		}
 
 		bool ready_to_act() const {
-			return millis() - last_action_time > this->elapsed;
+			return millis() - last_action_time > this->cool_down;
 		}
 
 		void timestamp() {
@@ -108,7 +108,7 @@ class Moveable {
 
 		bool can_move;
 		int last_action_time;
-		int elapsed; // moves / sec
+		int cool_down; 
 };
 
 // Abstract class for objects that are drawable
@@ -198,6 +198,17 @@ class Net : public Moveable, public Drawable {
 			// selectively turn one LED off
 		}
 
+		void goal() {
+			// TODO:
+			// make goaled = true
+		}
+
+		void has_been_goaled() const {
+
+			// TODO:
+
+		}
+
 		void move() {
 			// record timestamp
 			Moveable::timestamp();
@@ -212,6 +223,9 @@ class Net : public Moveable, public Drawable {
 			// TODO:
 		}
 
+		private:
+
+			bool goaled = false;
 		
 };
 
@@ -292,7 +306,8 @@ class Player : public Moveable, public Drawable {
 		}
 
 	private:
-		bool unlimited_shots = true;
+
+		bool unlimited_shots = false;
 		int num_shots = 3;
 
 };
@@ -325,9 +340,9 @@ class Game {
 
 	private:
 
-		int level;
+		int level = 0;
 
-		Printer printer;
+		Printer print;
 		Player player;
 		SoccerBall ball;
 		Defender defenders[NUM_DEFENDERS];
@@ -335,12 +350,12 @@ class Game {
 		void initialize_time_counter() {
 			int time = millis();
 			// for player
-			this->player.set_initial_action_time(time);
+			player.set_initial_action_time(time);
 			// for soccer ball
-			this->ball.set_initial_action_time(time);
+			ball.set_initial_action_time(time);
 			// for all defenders
-			for(int i = 0; i < NUM_DEFENDERS; i++){
-			    this->defenders[i].set_initial_action_time(time);
+			for (int i = 0; i < NUM_DEFENDERS; i++){
+			    defenders[i].set_initial_action_time(time);
 			}
 
 		}
@@ -368,6 +383,13 @@ class Game {
 		void draw_player() {
 
 			// TODO:
+
+		}
+
+		void level_cleared () {
+			
+			// TODO:
+			// check if the net has been goaled
 
 		}
 
