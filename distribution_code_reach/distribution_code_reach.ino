@@ -191,7 +191,7 @@ class Net : public Moveable, public Drawable {
 
 	public: 
 
-		Net(bool move = false): Moveable(move), Drawable(move) {}
+		Net(bool move = false): Moveable(move), Drawable() {}
 
 
 		void goal() {
