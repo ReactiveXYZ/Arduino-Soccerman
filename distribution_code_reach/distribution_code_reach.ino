@@ -86,6 +86,10 @@ class Moveable {
 			this->can_move = move;
 		}
 
+		void can_move() {
+			return this->can_move;
+		}
+
 		void set_speed(int speed) {
 			this->cool_down = 1000 / speed;
 		}
@@ -136,9 +140,9 @@ class Drawable {
 			return this->y;
 		}
 
-		void initialize(int x_arg, int y_arg) {
-			this->x = x_arg;
-			this->y = y_arg;
+		void initialize(int x, int y) {
+			this->x = x;
+			this->y = y;
 		}
 
 		virtual void draw() = 0;
@@ -180,10 +184,6 @@ class Defender: public Moveable, public Drawable {
 			// TODO: 
 		}
 
-		bool has_bounded() {
-			// TODO:
-		}
-
 };
 
 // Net
@@ -193,12 +193,9 @@ class Net : public Moveable, public Drawable {
 
 		Net(bool move = false): Moveable(move), Drawable(move) {}
 
-		void miss() {
-			// TODO::
-			// selectively turn one LED off
-		}
 
 		void goal() {
+
 			// TODO:
 			// make goaled = true
 		}
