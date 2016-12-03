@@ -59,11 +59,7 @@ class Printer {
 
 	public:
 
-		void level() {
-			// TODO
-		}
-
-		void remaining_shots() {
+		void level(int level) {
 			// TODO
 		}
 
