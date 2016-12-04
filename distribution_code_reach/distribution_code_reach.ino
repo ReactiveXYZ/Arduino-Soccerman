@@ -146,16 +146,14 @@ class Drawable {
 
 	protected:
 
+		int x;
+		int y;
+
 		void draw_with_color(int x, int y, Color color) {
 
 			matrix.drawPixel(x, y, color.to_333());
 
 		}
-
-	private:
-
-		int x;
-		int y;
 
 };
 
