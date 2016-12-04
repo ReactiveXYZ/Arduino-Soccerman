@@ -344,74 +344,83 @@ class Commander {
 
 	public:
 
-	Commander(Player* p, SoccerBall* s) {
-		this->pla_other = p;
-		this->soc_other = s;
-	}
+		Commander() {}
 
-	void send_movement(Drawable* object) {
+		void set_other_player(Player* player) {
 
-      // construct message to send
-      String obj_name = object->get_object_class_name();
+			pla_other = player;
 
-      String x = String(object->get_x());
+		}
 
-      String y = String(object->get_y());
+		void set_other_soccer_ball(SoccerBall* ball) {
 
-      String message = obj_name + " " + x + " " + y + "\n";
+			soc_other = ball;
 
-      // write the message 
-      Serial.write(message.c_str());
+		}
 
-      // delete pointer
-      delete object;
+		void send_movement(Drawable* object) {
 
-  	}
+	      // construct message to send
+	      String obj_name = object->get_object_class_name();
 
-	void read_movement() {
+	      String x = String(object->get_x());
 
-	  	if (Serial.available() > 0) {
+	      String y = String(object->get_y());
 
-	  		String message = Serial.readStringUntil('\n');
+	      String message = obj_name + " " + x + " " + y + "\n";
 
-	        // extract parameters
-	        int sp1 = message.indexOf(' ');
+	      // write the message 
+	      Serial.write(message.c_str());
 
-	        String obj_name = message.substring(0, sp1);
-
-	        int sp2 = message.indexOf(' ', sp1 + 1);
-
-	        int x_coord = message.substring(sp1 + 1, sp2).toInt();
-
-	        int y_coord = message.substring(sp2 + 1).toInt();
-
-	        // apply movements
-	        if (obj_name == "pla") {
-
-	          // redraw player
-	          pla_other->initialize(x_coord, y_coord);
-	          pla_other->redraw();
-
-	      	}
-
-	      	if (obj_name == "soc") {
-
-	          // redraw soccer ball
-	          soc_other->initialize(x_coord, y_coord);
-	          soc_other->redraw();
-
-	  		}
+	      // delete pointer
+	      delete object;
 
 	  	}
 
-	}
+		void read_movement() {
 
-	~Commander() {
-      // remove dangling pointers
-      delete pla_other;
-      delete soc_other;
+		  	if (Serial.available() > 0) {
 
-  	}
+		  		String message = Serial.readStringUntil('\n');
+
+		        // extract parameters
+		        int sp1 = message.indexOf(' ');
+
+		        String obj_name = message.substring(0, sp1);
+
+		        int sp2 = message.indexOf(' ', sp1 + 1);
+
+		        int x_coord = message.substring(sp1 + 1, sp2).toInt();
+
+		        int y_coord = message.substring(sp2 + 1).toInt();
+
+		        // apply movements
+		        if (obj_name == "pla") {
+
+		          // redraw player
+		          pla_other->initialize(x_coord, y_coord);
+		          pla_other->redraw();
+
+		      	}
+
+		      	if (obj_name == "soc") {
+
+		          // redraw soccer ball
+		          soc_other->initialize(x_coord, y_coord);
+		          soc_other->redraw();
+
+		  		}
+
+		  	}
+
+		}
+
+		~Commander() {
+	      // remove dangling pointers
+	      delete pla_other;
+	      delete soc_other;
+
+	  	}
 
   	private:
 
