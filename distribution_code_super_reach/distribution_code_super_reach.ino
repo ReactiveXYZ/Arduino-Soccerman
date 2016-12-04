@@ -75,40 +75,40 @@ class Moveable {
 
 	public:
 
-	explicit Moveable(bool move):can_move(move), 
-								last_action_time(0){};
+		explicit Moveable(bool move):can_move(move), 
+									last_action_time(0){};
 
-	void set_can_move(bool move) {
-		this->can_move = move;
-	}
+		void set_can_move(bool move) {
+			this->can_move = move;
+		}
 
-	void get_can_move() {
-		return this->can_move;
-	}
+		void get_can_move() {
+			return this->can_move;
+		}
 
-	void set_speed(int speed) {
-		this->cool_down = 1000 / speed;
-	}
+		void set_speed(int speed) {
+			this->cool_down = 1000 / speed;
+		}
 
-	void set_initial_action_time(int time) {
-		this->last_action_time = time;
-	}
+		void set_initial_action_time(int time) {
+			this->last_action_time = time;
+		}
 
-	bool ready_to_act() const {
-		return millis() - last_action_time > this->cool_down;
-	}
+		bool ready_to_act() const {
+			return millis() - last_action_time > this->cool_down;
+		}
 
-	void timestamp() {
-		this->last_action_time = millis();
-	}
+		void timestamp() {
+			this->last_action_time = millis();
+		}
 
-	virtual void move() = 0;
+		virtual void move() = 0;
 
 	private:
 
-	bool can_move;
-	int last_action_time;
-	int cool_down; 
+		bool can_move;
+		int last_action_time;
+		int cool_down; 
 };
 
 // Abstract class for objects that are drawable
@@ -117,8 +117,8 @@ class Drawable {
 	public:
 
 		explicit Drawable(int origin_x = 0, 
-			int origin_y = 0):x(origin_x)
-		,y(origin_y){};
+						  int origin_y = 0):x(origin_x)
+							 			   ,y(origin_y){};
 
 		void set_x(int x) {
 			this->x = x;
@@ -174,27 +174,27 @@ class Defender: public Moveable, public Drawable {
 
 	public:
 
-	Defender(bool move = false): Moveable(move), Drawable() {}
+		Defender(bool move = false): Moveable(move), Drawable() {}
 
-	void move() {
-		// record timestamp
-		Moveable::timestamp();
-		// TODO: 
-  	}
+		void move() {
+			// record timestamp
+			Moveable::timestamp();
+			// TODO: 
+	  	}
 
-	String get_object_class_name() {
+		String get_object_class_name() {
 
-		return String("def");
+			return String("def");
 
-	}
+		}
 
-  	void draw() {
-    	// TODO:
-  	}
+	  	void draw() {
+	    	// TODO:
+	  	}
 
-  	void erase() {
-      	// TODO: 
-  	}
+	  	void erase() {
+	      	// TODO: 
+	  	}
 
 };
 
@@ -398,6 +398,7 @@ class Commander {
 		        if (obj_name == "pla") {
 
 		          // redraw player
+		          pla_other->erase();
 		          pla_other->initialize(x_coord, y_coord);
 		          pla_other->redraw();
 
@@ -406,6 +407,7 @@ class Commander {
 		      	if (obj_name == "soc") {
 
 		          // redraw soccer ball
+		          soc_other->erase();
 		          soc_other->initialize(x_coord, y_coord);
 		          soc_other->redraw();
 
