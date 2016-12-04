@@ -389,16 +389,16 @@ class Commander {
 				if (obj_name == "pla") {
 
 					// redraw player
-					this->pla_other.initialize(x_coord, y_coord);
-					this->pla_other.redraw();
+					pla_other.initialize(x_coord, y_coord);
+					pla_other.redraw();
 
 				}
 
 				if (obj_name == "soc") {
 
 					// redraw soccer ball
-					this->soc_other.initialize(x_coord, y_coord);
-					this->soc_other.redraw();
+					soc_other.initialize(x_coord, y_coord);
+					soc_other.redraw();
 
 				}
 

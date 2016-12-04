@@ -1,7 +1,7 @@
 import serial
 
-PORT_PLAYER_ONE = "/dev/tty.test1"
-PORT_PLAYER_TWO = "/dev/tty.test2"
+PORT_PLAYER_ONE = "/dev/cu.usbmodem1411"
+PORT_PLAYER_TWO = "/dev/cu.usbmodem1421"
 
 PORT_TIME_OUT = 0.1
 
@@ -10,13 +10,13 @@ class Player(object):
 
 	def __init__(self, port):
 		
-		self.ser = serial.Serial(port, timeout = PORT_TIME_OUT)
+		self.ser = serial.Serial(port, 9600, timeout = PORT_TIME_OUT)
 
 	def read(self):
 		
 		return self.ser.readline()
 
-	def write(self,message):
+	def write(self, message):
 
 		self.ser.write(message)
 
@@ -39,12 +39,12 @@ class Server(object):
 
 			if p1msg:
 			 	
-			 	print p1msg
+			 	#print "from player1: " + str(p1msg)
 			 	self.player2.write(p1msg)
 
 			if p2msg:
 				
-				print p2msg
+				#print "from player2: " + str(p2msg)
 				self.player1.write(p2msg)
 
 
