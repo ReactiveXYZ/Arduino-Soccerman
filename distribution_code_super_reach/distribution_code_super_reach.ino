@@ -24,23 +24,23 @@ RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
 
 // define Color classes and common colors
 class Color {
-  	public:
-    	int red;
-    	int green;
-    	int blue;
-	    Color() {
-	    	red = 0;
-	      	green = 0;
-	      	blue = 0;
-	    }
-	    Color(int r, int g, int b) {
-	      	red = r;
-	      	green = g;
-	      	blue = b;
-	    }
-	    uint16_t to_333() const {
-	      	return matrix.Color333(red, green, blue);
-	    }
+	public:
+	int red;
+	int green;
+	int blue;
+	Color() {
+		red = 0;
+		green = 0;
+		blue = 0;
+	}
+	Color(int r, int g, int b) {
+		red = r;
+		green = g;
+		blue = b;
+	}
+	uint16_t to_333() const {
+		return matrix.Color333(red, green, blue);
+	}
 };
 
 const Color BLACK(0, 0, 0);
@@ -59,13 +59,13 @@ class Printer {
 
 	public:
 
-		void level(int level) {
-			// TODO
-		}
+	void level(int level) {
+    	// TODO
+  	}
 
-		void game_over() {
-			// TODO
-		}
+	void game_over() {
+	  	// TODO
+	}
 
 };
 
@@ -75,42 +75,40 @@ class Moveable {
 
 	public:
 
-		explicit Moveable(bool move):can_move(move), 
-									last_action_time(0){};
+	explicit Moveable(bool move):can_move(move), 
+								last_action_time(0){};
 
-		void set_can_move(bool move) {
-			this->can_move = move;
-		}
+	void set_can_move(bool move) {
+		this->can_move = move;
+	}
 
-		void can_move() {
-			return this->can_move;
-		}
+	void get_can_move() {
+		return this->can_move;
+	}
 
-		void set_speed(int speed) {
-			this->cool_down = 1000 / speed;
-		}
+	void set_speed(int speed) {
+		this->cool_down = 1000 / speed;
+	}
 
-		void set_initial_action_time(int time) {
-			this->last_action_time = time;
-		}
+	void set_initial_action_time(int time) {
+		this->last_action_time = time;
+	}
 
-		bool ready_to_act() const {
-			return millis() - last_action_time > this->cool_down;
-		}
+	bool ready_to_act() const {
+		return millis() - last_action_time > this->cool_down;
+	}
 
-		void timestamp() {
-			this->last_action_time = millis();
-		}
+	void timestamp() {
+		this->last_action_time = millis();
+	}
 
-		virtual String get_object_class_name() = 0;
-
-		virtual void move() = 0;
+	virtual void move() = 0;
 
 	private:
 
-		bool can_move;
-		int last_action_time;
-		int cool_down; 
+	bool can_move;
+	int last_action_time;
+	int cool_down; 
 };
 
 // Abstract class for objects that are drawable
@@ -119,8 +117,8 @@ class Drawable {
 	public:
 
 		explicit Drawable(int origin_x = 0, 
-						  int origin_y = 0):x(origin_x)
-										   ,y(origin_y){};
+			int origin_y = 0):x(origin_x)
+		,y(origin_y){};
 
 		void set_x(int x) {
 			this->x = x;
@@ -150,10 +148,15 @@ class Drawable {
 
 		}
 
+		virtual String get_object_class_name() = 0;
+
 		virtual void draw() = 0;
 		virtual void erase() = 0;
 
 	protected:
+
+		int x;
+		int y;
 
 		void draw_with_color(int x, int y, Color color) {
 
@@ -161,10 +164,7 @@ class Drawable {
 
 		}
 
-	private:
-
-		int x;
-		int y;
+	
 
 };
 
@@ -174,27 +174,27 @@ class Defender: public Moveable, public Drawable {
 
 	public:
 
-		Defender(bool move = false): Moveable(move), Drawable() {}
+	Defender(bool move = false): Moveable(move), Drawable() {}
 
-		void move() {
-			// record timestamp
-			Moveable::timestamp();
-			// TODO: 
-		}
+	void move() {
+		// record timestamp
+		Moveable::timestamp();
+		// TODO: 
+  	}
 
-		String get_object_class_name() {
+	String get_object_class_name() {
 
-			return String("def");
+		return String("def");
 
-		}
+	}
 
-		void draw() {
-			// TODO:
-		}
+  	void draw() {
+    	// TODO:
+  	}
 
-		void erase() {
-			// TODO: 
-		}
+  	void erase() {
+      	// TODO: 
+  	}
 
 };
 
@@ -208,40 +208,40 @@ class Net : public Moveable, public Drawable {
 
 		void goal() {
 
-			// TODO:
-			// make goaled = true
-		}
+	      	// TODO:
+	      	// make goaled = true
+	  	}
 
-		void has_been_goaled() const {
+	  	void has_been_goaled() const {
 
-			// TODO:
+	      	// TODO:
 
-		}
+	  	}
 
-		void move() {
-			// record timestamp
-			Moveable::timestamp();
-			// TODO: 
-		}
+	  	void move() {
+	      	// record timestamp
+	      	Moveable::timestamp();
+	      	// TODO: 
+	  	}
 
-		String get_object_class_name() {
+	  	String get_object_class_name() {
 
-			return String("net");
+	  		return String("net");
 
-		}
+	  	}
 
-		void draw() {
-			// TODO:
-		}
+	  	void draw() {
+	      	// TODO:
+	  	}
 
-		void erase() {
-			// TODO:
-		}
+	  	void erase() {
+	      	// TODO:
+	  	}
 
-		private:
+  	private:
 
-			bool goaled = false;
-		
+  		bool goaled = false;
+
 };
 
 // Soccer ball
@@ -252,44 +252,44 @@ class SoccerBall : public Moveable, public Drawable {
 		SoccerBall(bool move = true): Moveable(move), Drawable() {}
 
 		bool has_been_shot() const {
-			// TODO:
-		}
+	      	// TODO:
+	  	}
 
-		void shoot(int x_arg, int y_arg) {
-			// TODO:
-		}
+	  	void shoot(int x_arg, int y_arg) {
+	      	// TODO:
+	  	}
 
-		bool has_hit_defender(Defender& defender) {
-			// TODO:
-		}
+	  	bool has_hit_defender(Defender& defender) {
+	      	// TODO:
+	  	}
 
-		bool has_hit_net(Net& net){
-			// TODO:
-		}
+	  	bool has_hit_net(Net& net){
+	      	// TODO:
+	  	}
 
-		void move() {
-			// record timestamp
-			Moveable::timestamp();
-			// TODO:
-		}
+	  	void move() {
+	      	// record timestamp
+	      	Moveable::timestamp();
+	      	// TODO:
+	  	}
 
-		String get_object_class_name() {
+	  	String get_object_class_name() {
 
-			return String("soc");
+	  		return String("soc");
 
-		}
+	  	}
 
-		void erase() {
-			// TODO:
-		}
+	  	void erase() {
+	      	// TODO:
+	  	}
 
-		void draw() {
-			// TODO:
-		}
+	  	void draw() {
+	      	// TODO:
+	  	}
 
-	private:
+  	private:
 
-		bool shot;
+  		bool shot;
 
 };
 
@@ -300,42 +300,42 @@ class Player : public Moveable, public Drawable {
 
 		Player(bool move = true): Moveable(move), Drawable() {}
 
-		void allow_unlimited_shots() {
-			// TODO:
-		}
+			void allow_unlimited_shots() {
+	      	// TODO:
+	  	}
 
-		void fail_to_goal(){
-			// TODO
-		}
+	  	void fail_to_goal(){
+	      	// TODO
+	  	}
 
-		bool has_collided_with(Defender& defender) {
-			// TODO:
-		}
+	  	bool has_collided_with(Defender& defender) {
+	      	// TODO:
+	  	}
 
-		void move() {
-			// record timestamp
-			Moveable::timestamp();
-			// TODO:
-		}
+	  	void move() {
+	      	// record timestamp
+	      	Moveable::timestamp();
+	      	// TODO:
+	  	}
 
-		String get_object_class_name() {
+	  	String get_object_class_name() {
 
-			return String("pla");
+	  		return String("pla");
 
-		}
+	  	}
 
-		void erase() {
-			// TODO:
-		}
+	  	void erase() {
+	      	// TODO:
+	  	}
 
-		void draw() {
-			// TODO:
-		}
+	  	void draw() {
+	      	// TODO:
+	  	}
 
-	private:
+  	private:
 
-		bool unlimited_shots = false;
-		int num_shots = 3;
+  		bool unlimited_shots = false;
+  		int num_shots = 3;
 
 };
 
@@ -344,79 +344,79 @@ class Commander {
 
 	public:
 
-		Commander(Player* p, SoccerBall* s) {
-			this->pla_other = p;
-			this->soc_other = s;
-		}
+	Commander(Player* p, SoccerBall* s) {
+		this->pla_other = p;
+		this->soc_other = s;
+	}
 
-		void send_movement(Moveable* object) {
+	void send_movement(Drawable* object) {
 
-			// construct message to send
-			String obj_name = object.get_object_class_name();
+      // construct message to send
+      String obj_name = object->get_object_class_name();
 
-			String x = object.get_x();
+      String x = String(object->get_x());
 
-			String y = object.get_y();
+      String y = String(object->get_y());
 
-			String message = obj_name + " " + x + " " + y + "\n";
+      String message = obj_name + " " + x + " " + y + "\n";
 
-			// write the message 
-			Serial.write(message);
+      // write the message 
+      Serial.write(message.c_str());
 
-			// delete pointer
-			delete object;
+      // delete pointer
+      delete object;
 
-		}
+  	}
 
-		void read_movement() {
+	void read_movement() {
 
-			if (Serial.available() > 0) {
+	  	if (Serial.available() > 0) {
 
-				String message = Serial.readStringUntil('\n');
+	  		String message = Serial.readStringUntil('\n');
 
-				// extract parameters
-				int sp1 = message.indexOf(' ');
+	        // extract parameters
+	        int sp1 = message.indexOf(' ');
 
-				String obj_name = message.substring(0, sp1);
+	        String obj_name = message.substring(0, sp1);
 
-				int sp2 = message.indexOf(' ', sp1 + 1);
+	        int sp2 = message.indexOf(' ', sp1 + 1);
 
-				int x_coord = message.substring(sp1 + 1, sp2).toInt();
+	        int x_coord = message.substring(sp1 + 1, sp2).toInt();
 
-				int y_coord = message.substring(sp2 + 1).toInt();
+	        int y_coord = message.substring(sp2 + 1).toInt();
 
-				// apply movements
-				if (obj_name == "pla") {
+	        // apply movements
+	        if (obj_name == "pla") {
 
-					// redraw player
-					pla_other.initialize(x_coord, y_coord);
-					pla_other.redraw();
+	          // redraw player
+	          pla_other->initialize(x_coord, y_coord);
+	          pla_other->redraw();
 
-				}
+	      	}
 
-				if (obj_name == "soc") {
+	      	if (obj_name == "soc") {
 
-					// redraw soccer ball
-					soc_other.initialize(x_coord, y_coord);
-					soc_other.redraw();
+	          // redraw soccer ball
+	          soc_other->initialize(x_coord, y_coord);
+	          soc_other->redraw();
 
-				}
+	  		}
 
-			}
+	  	}
 
-		}
+	}
 
-		~Commander() {
-			// remove dangling pointers
-			delete pla_other;
-			delete soc_other;
+	~Commander() {
+      // remove dangling pointers
+      delete pla_other;
+      delete soc_other;
 
-		}
+  	}
 
-	private:
-		
-		Player* pla_other;
-		SoccerBall* soc_other;
+  	private:
+
+  		Player* pla_other;
+  		SoccerBall* soc_other;
 
 };
 
@@ -426,98 +426,98 @@ class Game {
 	public:
 
 		Game() {
-			// initialize level
-			level = 0;
-		}
+      		// initialize level
+      		level = 0;
+	  	}
 
-		void setup() {
-			// initialize timestamp for all objects
-			this->initialize_time_counter();
-			// initialize move status for all objects
-			this->initialize_move_status();
+	  	void setup() {
+	      // initialize timestamp for all objects
+	      this->initialize_time_counter();
+	      // initialize move status for all objects
+	      this->initialize_move_status();
 
-			// TODO:
-			// initialize matrix etc...
-		}
+	      // TODO:
+	      // initialize matrix etc...
+	  	}
 
-		void loop(int potentiometer_value, bool button_pressed) {
+	  	void loop(int potentiometer_value, bool button_pressed) {
 
-			// TODO:
+	      // TODO:
 
-		}
+	  	}
 
 	private:
 
-		int level = 0;
+	  int level = 0;
 
-		Printer print;
-		Player player;
-		SoccerBall ball;
-		Defender defenders[NUM_DEFENDERS];
+	  Printer print;
+	  Player player;
+	  SoccerBall ball;
+	  Defender defenders[NUM_DEFENDERS];
 
-		void initialize_time_counter() {
-			int time = millis();
-			// for player
-			player.set_initial_action_time(time);
-			// for soccer ball
-			ball.set_initial_action_time(time);
-			// for all defenders
-			for (int i = 0; i < NUM_DEFENDERS; i++){
-			    defenders[i].set_initial_action_time(time);
-			}
+	  void initialize_time_counter() {
+	  	int time = millis();
+	      // for player
+	      player.set_initial_action_time(time);
+	      // for soccer ball
+	      ball.set_initial_action_time(time);
+	      // for all defenders
+	      for (int i = 0; i < NUM_DEFENDERS; i++){
+	      	defenders[i].set_initial_action_time(time);
+	      }
 
-		}
+	  }
 
-		void initialize_move_status() {
+	  void initialize_move_status() {
 
-			// TODO:
-			// change move status and speed
-			// of objects based on level
+	      // TODO:
+	      // change move status and speed
+	      // of objects based on level
 
-		}
+	  }
 
-		void draw_net() {
+	  void draw_net() {
 
-			// TODO:
+	      // TODO:
 
-		}
+	  }
 
-		void draw_defenders() {
+	  void draw_defenders() {
 
-			// TODO:
+	      // TODO:
 
-		}
+	  }
 
-		void draw_player() {
+	  void draw_player() {
 
-			// TODO:
+	      // TODO:
 
-		}
+	  }
 
-		void level_cleared () {
-			
-			// TODO:
-			// check if the net has been goaled
+	  void level_cleared () {
 
-		}
+	      // TODO:
+	      // check if the net has been goaled
 
-		void reset_level() {
+	  }
 
-			// TODO:
+	  void reset_level() {
 
-		}
+	      // TODO:
 
-		void next_level() {
+	  }
 
-			// TODO:
+	  void next_level() {
 
-		}
+	      // TODO:
 
-		void game_over() {
+	  }
 
-			// TODO:
+	  void game_over() {
 
-		}
+	      // TODO:
+
+	  }
 
 };
 
@@ -529,11 +529,11 @@ Game game;
 void setup() {
 
 	Serial.begin(9600);
-	Serial.setTimeOut(10);
-  	pinMode(BUTTON_PIN_NUMBER, INPUT);
-  	matrix.begin();
+	Serial.setTimeout(10);
+	pinMode(BUTTON_PIN_NUMBER, INPUT);
+	matrix.begin();
 
-  	game.setup();
+	game.setup();
 
 }
 
@@ -543,7 +543,7 @@ void loop() {
 
 	int potentiometer_value = analogRead(POTENTIOMETER_PIN_NUMBER);
 
-  	bool button_pressed = (digitalRead(BUTTON_PIN_NUMBER) == HIGH);
+	bool button_pressed = (digitalRead(BUTTON_PIN_NUMBER) == HIGH);
 
-  	game.loop(potentiometer_value, button_pressed);
+	game.loop(potentiometer_value, button_pressed);
 }
