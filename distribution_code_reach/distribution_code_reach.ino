@@ -60,11 +60,69 @@ class Printer {
 	public:
 
 		void level(int level) {
-			// TODO
+			// L
+			matrix.setCursor(1,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print('L');
+			// E
+			matrix.setCursor(7,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print('E');
+			// V
+			matrix.setCursor(13,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print('V');
+			// E
+			matrix.setCursor(19,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print('E');
+			// L
+			matrix.setCursor(25,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print('L');
+			// :
+			matrix.setCursor(29,1);
+			matrix.setTextColor(AQUA.to_333());
+			matrix.print(':');
+			// level
+			matrix.setCursor(13, 9);
+			matrix.setTextColor(PURPLE.to_333());
+			matrix.print(level);
 		}
 
 		void game_over() {
-			// TODO
+			// G
+            matrix.setCursor(4,0);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('G');
+            // A
+            matrix.setCursor(10,0);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('A');
+            // M
+            matrix.setCursor(16,0);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('M');
+            // E
+            matrix.setCursor(22,0);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('E');
+            // O
+            matrix.setCursor(4,9);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('O');
+            // V
+            matrix.setCursor(10,9);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('V');
+            // E
+            matrix.setCursor(16,9);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('E');
+            // R
+            matrix.setCursor(22,9);
+            matrix.setTextColor(RED.to_333());
+            matrix.print('R');
 		}
 
 };
@@ -162,21 +220,55 @@ class Defender: public Moveable, public Drawable {
 
 	public:
 
-		Defender(bool move = false): Moveable(move), Drawable() {}
+		Defender(bool move = false): Moveable(move), Drawable() {
+			// set coordinates of the most left pixel of the current defender
+		    initialize(4, 3);
+		}
 
 		void move() {
 			// record timestamp
 			Moveable::timestamp();
-			// TODO: 
+
+			erase();
+
+			if (can_move) {
+				if ((x >= 0) && (x <= 4)) {
+					if (move_left) {
+						x--;
+						if (x == 0) {
+							move_left = false;
+						}
+					}
+					else {
+						x++;
+						if (x == 4) {
+							move_left = true;
+						}
+					}
+				}
+			}
+
+			draw();
 		}
 
 		void draw() {
-			// TODO:
+			// (x, y) represents the most left pixel of the current defender
+			draw_with_color(x, y, RED);
+			draw_with_color(x + 1, y, RED);
+			draw_with_color(x + 2, y, RED);
+			draw_with_color(x + 3, y, RED);
 		}
 
 		void erase() {
-			// TODO: 
+			// (x, y) represents the most left pixel of the current defender
+			draw_with_color(x, y, BLACK);
+			draw_with_color(x + 1, y, BLACK);
+			draw_with_color(x + 2, y, BLACK);
+			draw_with_color(x + 3, y, BLACK);
 		}
+
+	private:
+		bool move_left = true;
 
 };
 
@@ -185,38 +277,70 @@ class Net : public Moveable, public Drawable {
 
 	public: 
 
-		Net(bool move = false): Moveable(move), Drawable() {}
-
-
-		void goal() {
-
-			// TODO:
-			// make goaled = true
+		Net(bool move = false): Moveable(move), Drawable() {
+			// set coordinates of the upper left pixel of the net
+			initialize(11, 0);
 		}
 
-		void has_been_goaled() const {
+		void goal() {
+			goaled = true;
+		}
 
-			// TODO:
-
+		bool has_been_goaled() const {
+			return goaled;
 		}
 
 		void move() {
 			// record timestamp
 			Moveable::timestamp();
-			// TODO: 
+
+			erase();
+			
+			if (can_move) {
+				if ((x >= 0) && (x <= 25)) {
+					if (move_right) {
+						x++;
+						if (x == 25) {
+							move_right = false;
+						}
+					}
+					else {
+						x--;
+						if (x == 0) {
+							move_right = true;
+						}
+					}
+				}
+			} 
+
+			draw();
+
 		}
 
 		void draw() {
-			// TODO:
+			// (x, y) represents the upper left pixel of the net
+			for (int i = 0; i <= 6; ++i) {
+				draw_with_color(x + i, y, WHITE);
+			}
+
+			draw_with_color(x, y + 1, WHITE);
+			draw_with_color(x + 6, y + 1, WHITE);
 		}
 
 		void erase() {
-			// TODO:
+			// (x, y) represents the upper left pixel of the net
+			for (int i = 0; i <= 6; ++i) {
+				draw_with_color(x + i, y, BLACK);
+			}
+
+			draw_with_color(x, y + 1, BLACK);
+			draw_with_color(x + 6, y + 1, BLACK);
 		}
 
 		private:
 
 			bool goaled = false;
+			bool move_right = true;
 		
 };
 
@@ -225,36 +349,70 @@ class SoccerBall : public Moveable, public Drawable {
 
 	public:
 
-		SoccerBall(bool move = true): Moveable(move), Drawable() {}
+		SoccerBall(bool move = true): Moveable(move), Drawable() {
+			// set coordinates of the being fired soccerball
+			initialize(15, 11);
+		}
 
 		bool has_been_shot() const {
-			// TODO:
+			return shot;
 		}
 
 		void shoot(int x_arg, int y_arg) {
-			// TODO:
+			shot = true;
+			x = x_arg;
+			y = y_arg;
 		}
 
 		bool has_hit_defender(Defender& defender) {
-			// TODO:
+			if ((y == 3) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
+				            (x >= defender.get_x() + 8 && x <= defender.get_x() + 11) ||
+				            (x >= defender.get_x() + 16 && x <= defender.get_x() + 19) ||
+				            (x >= defender.get_x() + 24 && x <= defender.get_x() + 27))) {
+				shot = false;
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
-		bool has_hit_net(Net& net){
-			// TODO:
+		bool has_hit_net(Net& net) {
+			if ((y == 1) && (x >= net.get_x() + 1) && (x <= net.get_x() + 5)) {
+				shot = false;
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		void move() {
 			// record timestamp
 			Moveable::timestamp();
-			// TODO:
+
+			erase();
+
+			if (can_move) {
+				if (y > 0) {
+					y--;
+				}	
+				else {
+					shot = false;
+				}
+			}
+
+			draw();
 		}
 
 		void erase() {
-			// TODO:
+			// (x, y) represents the pixel of the being fired soccerball
+			draw_with_color(x, y, BLACK);
 		}
 
 		void draw() {
-			// TODO:
+			// (x, y) represents the pixel of the being fired soccerball
+			draw_with_color(x, y, ORANGE);
 		}
 
 	private:
@@ -268,44 +426,68 @@ class Player : public Moveable, public Drawable {
 
 	public:
 
-		Player(bool move = true): Moveable(move), Drawable() {}
+		Player(bool move = true): Moveable(move), Drawable() {
+			// set coordinates of the upper left pixel of the player
+			initialize(14, 14);
+		}
 
 		void allow_unlimited_shots() {
-			// TODO:
+			unlimited_shots = true;
 		}
 
-		void fail_to_goal(){
-			// TODO
+		void shoot(Soccerball& soccerball) {
+			if (!soccerball.has_been_shot()) {
+				soccerball.shoot(x + 1, y + 2 - num_shots);
+				if (!unlimited_shots) {
+					num_shots--;
+					draw();
+				}
+			}
+            
 		}
 
-		bool has_collided_with(Defender& defender) {
-			// TODO:
+		int get_num_shots() {
+			return num_shots;
 		}
+
 
 		void move() {
 			// record timestamp
 			Moveable::timestamp();
-			// TODO:
+			// leave blank temporarily
 		}
 
 		void erase() {
-			// TODO:
+			// (x, y) represents the upper left pixel of the player
+			draw_with_color(x, y, BLACK);
+			draw_with_color(x, y + 1, BLACK);
+			draw_with_color(x + 2, y, BLACK);
+			draw_with_color(x + 2, y + 1, BLACK);
 		}
 
 		void draw() {
-			// TODO:
+			// (x, y) represents the upper left pixel of the player
+			draw_with_color(x, y, AQUA);
+			draw_with_color(x, y + 1, AQUA);
+			draw_with_color(x + 2, y, AQUA);
+			draw_with_color(x + 2, y + 1, AQUA);
+
+			int copy_num_shots = num_shots;
+			while (copy_num_shots > 0) {
+				draw_with_color(x + 1, 15 - copy_num_shots + 1, WHITE);
+				copy_num_shots--;
+			}
 		}
 
 	private:
 
 		bool unlimited_shots = false;
-		int num_shots = 3;
+		int num_shots = 5;
 
 };
 
 // Game
 class Game {
-
 	public:
 
 		Game() {
@@ -314,21 +496,71 @@ class Game {
 		}
 
 		void setup() {
-			// initialize timestamp for all objects
-			this->initialize_time_counter();
-			// initialize move status for all objects
-			this->initialize_move_status();
-
-			// TODO:
-			// initialize matrix etc...
+            next_level();
 		}
 
 		void loop(int potentiometer_value, bool button_pressed) {
 
 			// TODO:
+			// check how many shots player has
+			if (player.get_num_shots() < 1 ) {
+                game_over();
+                return;
+			}
+            // set current time
+			int current_time = millis();
+			// check whether level is cleared
+			if (!level_cleared()){
+				// timestamp for player
+				player.timestamp();
+				// detect the movement of player
+				int player_center = potentiometer_value / 32;
+				
+				// check if button is pressed
+				if (button_pressed){
+					
+					// shoot the ball after press the button
+					player.shoot(ball);
+				}
 
-		}
+                //  move soccer ball
+                if (ball.ready_to_act()) {
+                	if (ball.has_been_shot()) {
+                		
+                		ball.move();
+                		
+                	}
+                	else {
+                		ball.erase();
+                	}
+                }
+                // move defenders
+                if (defender.ready_to_act()){
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].move();
+                    }
 
+                		
+                	
+                }
+                // move the net
+                if (net.ready_to_act()) {
+                	net.move();
+                }
+                
+                if (ball.has_hit_net(net)) {
+                    net.goal();
+               }
+
+
+
+        }
+        else {
+            next_level();
+        }
+    }
+                
+			
 	private:
 
 		int level = 0;
@@ -337,8 +569,11 @@ class Game {
 		Player player;
 		SoccerBall ball;
 		Defender defenders[NUM_DEFENDERS];
+		Net net;
+		
+	
 
-		void initialize_time_counter() {
+        void initialize_time_counter() {
 			int time = millis();
 			// for player
 			player.set_initial_action_time(time);
@@ -356,51 +591,137 @@ class Game {
 			// TODO:
 			// change move status and speed
 			// of objects based on level
+			if (level == 1) {
+                // double check if the speed in proper when get the board
+                // allow player to ave unlimited shots
+                player.allow_unlimited_shots();
+                // set speed for defenders
+                defenders.set_speed(1);
+                // move defenders
+                defenders.set_can_move();
+                // set the speed of soccer
+                ball.set_speed(3);
+                // move soccer
+                ball.set_can_move();
+            }
+            if (level == 2) {
+                // double check if the speed in proper when get the board
+                // set speed for defenders
+                defenders.set_speed(1);
+                // move defenders
+                defenders.set_can_move();
+                // set the speed of soccer
+                ball.set_speed(3);
+                // move soccer
+                ball.set_can_move();
+            }
+            if (level == 3) {
+                // set the speed of defenders
+                defenders.set_speed(1);
+                // move defenders
+                defenders.set_can_move();
+                // set the speed of soccer
+                ball.set_speed(3);
+                // move soccer
+                ball.set_can_move();  
+                // set the speed of the net
+                net.set_speed(0.5);
+                // move the net
+                net.set_can_move();               
+            }
+        }
 
-		}
 
 		void draw_net() {
 
 			// TODO:
-
+			if (level == 0) {
+				return;
+			}
+			
+			net.draw();
+	      
+	    
 		}
 
 		void draw_defenders() {
 
 			// TODO:
+			// for all levels, defenders act similarly
+            
+            for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                // erase existing defenders
+            	defenders[i].erase();
+            	// draw defenders
+                defenders[i].initialize(8 * i, 3);
+            	defenders[i].draw();
+            	
+            	
+            }
+
 
 		}
 
 		void draw_player() {
 
-			// TODO:
+			// TODO
+            player.erase();
+            player.set_x(16);
+            player.draw();
 
 		}
-
-		void level_cleared () {
+        // I think level_cleared should be a boolean
+		bool level_cleared () {
 			
 			// TODO:
 			// check if the net has been goaled
-
-		}
+			
+            return net.has_been_goaled();
+        }
 
 		void reset_level() {
 
 			// TODO:
+			// assume there is getter in player class
+			
+				// clear board
+                matrix.fillScreen(BLACK.to_333());
+                // print messages
+                print.level(level);
+                // fill the screen with black
+                matrix.fillScreen(BLACK.to_333());
+            initialize_time_counter();
+            initialize_move_status();
+            // draw player
+            draw_player();
+            // draw defenders
+            draw_defenders();
+            draw_net();
 
 		}
 
 		void next_level() {
 
 			// TODO:
+			// increment level
+			level++;
+			// clear the board
+			matrix.fillScreen(BLACK.to_333());
+			// reset level to the next level
+			reset_level();
 
 		}
 
 		void game_over() {
 
 			// TODO:
+			// clear the board
+			matrix.fillScreen(BLACK.to_333());
+			// print the message
+			print.game_over();
 
 		}
+
 
 };
 
