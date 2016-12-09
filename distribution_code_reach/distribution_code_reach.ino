@@ -125,6 +125,41 @@ class Printer {
         matrix.print('R');
     }
 
+    void go_blue() {
+        // #
+        matrix.setCursor(4,0);
+        matrix.setTextColor(YELLOW.to_333());
+        matrix.print('#');
+        // G
+        matrix.setCursor(10,0);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('G');
+        // O
+        matrix.setCursor(16,0);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('O');
+        // #
+        matrix.setCursor(22,0);
+        matrix.setTextColor(YELLOW.to_333());
+        matrix.print('#');
+        // B
+        matrix.setCursor(4,9);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('B');
+        // L
+        matrix.setCursor(10,9);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('L');
+        // U
+        matrix.setCursor(16,9);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('U');
+        // E
+        matrix.setCursor(22,9);
+        matrix.setTextColor(BLUE.to_333());
+        matrix.print('E');
+    }
+
 };
 
 
@@ -145,7 +180,15 @@ class Moveable {
     }
 
     void set_speed(int speed) {
+      if (speed_unit == 0) {
+        this->speed_unit = speed;
+      }
+      
       this->cool_down = 1000 / speed;
+    }
+
+    int get_speed() {
+      return this->speed_unit;
     }
 
     void set_initial_action_time(int time) {
@@ -166,7 +209,8 @@ class Moveable {
 
     bool able_to_move;
     int last_action_time;
-    int cool_down; 
+    int cool_down;
+    int speed_unit = 0; 
 };
 
 // Abstract class for objects that are drawable
@@ -368,19 +412,20 @@ class SoccerBall : public Moveable, public Drawable {
     void reset() {
       erase();
       initialize(99,99);
+      set_speed(get_speed());
       shot = false;
     }
 
     bool has_been_shot() const {
       return shot;
     }
-
+    
     void shoot(int x_arg, int y_arg) {
       shot = true;
       x = x_arg;
       y = y_arg;
     }
-
+    
     bool has_hit_defender(Defender& defender) {
       if ((y == 3) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
                     (x >= defender.get_x() + 8 && x <= defender.get_x() + 11) ||
@@ -463,6 +508,7 @@ class Player : public Moveable, public Drawable {
         ball.shoot(x + 1, y + 2 - num_shots);
         if (!unlimited_shots) {
           num_shots--;
+          Serial.println(num_shots);
           draw();
         }
       }
@@ -560,10 +606,12 @@ class Game {
               if (ball.ready_to_act(current_time)) {
 
                   if (ball.has_been_shot()) {
-                    
+                    // set variable speed
+                    ball.set_speed((player.get_y() - ball.get_y()) * 0.5 * ball.get_speed());
+                    // move ball                  
                     ball.move();
                     
-                  }else {
+                  } else {
 
                     ball.reset();
                   
@@ -655,7 +703,7 @@ class Game {
                 // move soccer
                 ball.set_can_move(true);
                 // set the speed of soccer
-                ball.set_speed(10);
+                ball.set_speed(2);
                 net.set_can_move(false);
                 // net.set_speed(2);
                 // move defenders
