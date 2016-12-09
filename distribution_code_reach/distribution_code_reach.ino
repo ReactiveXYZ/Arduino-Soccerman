@@ -584,7 +584,7 @@ class Game {
 
       // TODO:
       // check how many shots player has
-      if (player.get_num_shots() < 1 ) {
+      if (player.get_num_shots() < 0 ) {
                 game_over();
                 return;
       }
