@@ -152,8 +152,8 @@ class Moveable {
       this->last_action_time = time;
     }
 
-    bool ready_to_act() const {
-      return millis() - last_action_time > this->cool_down;
+    bool ready_to_act(int currentTime) const {
+      return currentTime - last_action_time > this->cool_down;
     }
 
     void timestamp() {
@@ -289,6 +289,7 @@ class Net : public Moveable, public Drawable {
 
     void reset() {
       goaled = false;
+      move_right = true;
     }
 
     void goal() {
@@ -454,7 +455,6 @@ class Player : public Moveable, public Drawable {
         ball.shoot(x + 1, y + 2 - num_shots);
         if (!unlimited_shots) {
           num_shots--;
-          Serial.println(num_shots);
           draw();
         }
       }
@@ -530,7 +530,7 @@ class Game {
                 game_over();
                 return;
       }
-            // set current time
+      // set current time
       int current_time = millis();
       // check whether level is cleared
       if (!level_cleared()) {
@@ -549,7 +549,7 @@ class Game {
         }
 
             //  move soccer ball
-              if (ball.ready_to_act()) {
+              if (ball.ready_to_act(current_time)) {
 
                   if (ball.has_been_shot()) {
                     
@@ -566,7 +566,7 @@ class Game {
                 
                 for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
-                    if (defenders[i].ready_to_act()){
+                    if (defenders[i].ready_to_act(current_time)){
                         
                         defenders[i].move();
 
@@ -582,7 +582,7 @@ class Game {
                 }
 
                 // move the net
-                if (net.ready_to_act()) {
+                if (net.ready_to_act(current_time)) {
                   
                   net.move();
 
