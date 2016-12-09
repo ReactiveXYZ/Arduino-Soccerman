@@ -1,7 +1,7 @@
-#include < gamma.h > 
-#include < RGBmatrixPanel.h > 
-#include < Adafruit_GFX.h > 
-#include < EEPROM.h >
+#include <gamma.h> 
+#include <RGBmatrixPanel.h> 
+#include <Adafruit_GFX.h> 
+#include <EEPROM.h>
 
 // define the wiring of the LED screen
 const uint8_t CLK = 8;
@@ -168,38 +168,38 @@ class Moveable {
     public:
 
         explicit Moveable(bool move): able_to_move(move),
-        last_action_time(0) {};
+                                      last_action_time(0) {};
 
-    void set_can_move(bool move) {
-        this - > able_to_move = move;
-    }
+      void set_can_move(bool move) {
+        this->able_to_move = move;
+      }
 
-    bool can_move() {
-        return this - > able_to_move;
-    }
+      bool can_move() {
+        return this->able_to_move;
+      }
 
     void set_speed(int speed) {
         if (speed_unit == 0) {
-            this - > speed_unit = speed;
+            this->speed_unit = speed;
         }
 
-        this - > cool_down = 1000 / speed;
+        this->cool_down = 1000 / speed;
     }
 
     int get_speed() {
-        return this - > speed_unit;
+        return this->speed_unit;
     }
 
     void set_initial_action_time(int time) {
-        this - > last_action_time = time;
+        this->last_action_time = time;
     }
 
     bool ready_to_act(int currentTime) const {
-        return currentTime - last_action_time > this - > cool_down;
+        return currentTime - last_action_time > this->cool_down;
     }
 
     void timestamp() {
-        this - > last_action_time = millis();
+        this->last_action_time = millis();
     }
 
     virtual void move() = 0;
@@ -221,24 +221,24 @@ class Drawable {
             int origin_y = 0): x(origin_x), y(origin_y) {};
 
     void set_x(int x) {
-        this - > x = x;
+        this->x = x;
     }
 
     int get_x() const {
-        return this - > x;
+        return this->x;
     }
 
     void set_y(int y) {
-        this - > y = y;
+        this->y = y;
     }
 
     int get_y() const {
-        return this - > y;
+        return this->y;
     }
 
     void initialize(int x, int y) {
-        this - > x = x;
-        this - > y = y;
+        this->x = x;
+        this->y = y;
     }
 
     virtual void draw() = 0;
