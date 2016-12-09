@@ -600,7 +600,12 @@ class Game {
         if (!level_cleared()) {
 
             // detect the movement of player
-            player.reset(parse_potentiometer_value(potentiometer_value));
+            // remain stable if player is not moving significantly
+            if (abs(prev_potentiometer_value - potentiometer_value) > 30) {
+              player.reset(parse_potentiometer_value(potentiometer_value));
+              prev_potentiometer_value = potentiometer_value;
+            }
+            
             // check if button is pressed
             if (button_pressed && (current_time - time > 500) && !ball.has_been_shot()) {
                 // erase the previous ball
@@ -670,6 +675,7 @@ class Game {
     Defender defenders[NUM_DEFENDERS];
     Net net;
     int time;
+    int prev_potentiometer_value = 512;
 
     void initialize_time_counter() {
         int time = millis();
