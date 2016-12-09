@@ -227,6 +227,7 @@ class Defender: public Moveable, public Drawable {
 
     void set_index(int i) {
         index = i;
+        move_left = false;
     }
   
     void move() {
@@ -446,15 +447,17 @@ class Player : public Moveable, public Drawable {
       initialize(14, 14);
     }
 
-    void allow_unlimited_shots() {
-      unlimited_shots = true;
+    void allow_unlimited_shots(bool allow) {
+      unlimited_shots = allow;
     }
 
     void shoot(SoccerBall& ball) {
       if (!ball.has_been_shot()) {
         ball.shoot(x + 1, y + 2 - num_shots);
+        Serial.println("Shot");
         if (!unlimited_shots) {
           num_shots--;
+          Serial.println(num_shots);
           draw();
         }
       }
@@ -536,10 +539,9 @@ class Game {
       if (!level_cleared()) {
         
         // detect the movement of player
-        int player_center = potentiometer_value / 32;
         player.erase();
-            player.set_x(player_center);
-            player.draw();
+        player.set_x(parsePotentiometerValue(potentiometer_value));
+        player.draw();
         // check if button is pressed
         if (button_pressed){
           // erase the previous ball
@@ -643,7 +645,7 @@ class Game {
       if (level == 1) {
                 // double check if the speed in proper when get the board
                 // allow player to ave unlimited shots
-                player.allow_unlimited_shots();
+                player.allow_unlimited_shots(true);
                 // move soccer
                 ball.set_can_move(true);
                 // set the speed of soccer
@@ -661,7 +663,7 @@ class Game {
             }
 
             if (level == 2) {
-                // double check if the speed in proper when get the board
+                player.allow_unlimited_shots(false);
                 // set the speed of soccer
                 ball.set_speed(3);
                 // move soccer
@@ -678,6 +680,7 @@ class Game {
             }
 
             if (level == 3) {
+                player.allow_unlimited_shots(false);
                 // set the speed of soccer
                 ball.set_speed(3);
                 // move soccer
@@ -697,6 +700,19 @@ class Game {
                              
             }
         }
+
+    int parsePotentiometerValue(int value) {
+
+      int val = value / 32;
+
+      if (val <= 0) {
+        return 0;
+      } else if (val >= 29) {
+        return 29;
+      }
+
+      return val;
+    }
 
 
     void draw_net() {
@@ -729,7 +745,7 @@ class Game {
 
       // TODO
             player.erase();
-            player.set_x(16);
+            player.set_x(14);
             player.draw();
 
     }
