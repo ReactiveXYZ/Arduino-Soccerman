@@ -414,6 +414,14 @@ class SoccerBall: public Moveable, public Drawable {
         shot = false;
     }
 
+    void reset_with_color(Color color) {
+        draw_with_color(x,y, color);
+        initialize(99, 99);
+        set_speed(get_speed());
+        shot = false;
+        erase();
+    }
+
     bool has_been_shot() const {
         return shot;
     }
@@ -425,7 +433,7 @@ class SoccerBall: public Moveable, public Drawable {
     }
 
     bool has_hit_defender(Defender & defender) {
-        if ((y == 3) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
+        if ((y == defender.get_y()) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
                 (x >= defender.get_x() + 8 && x <= defender.get_x() + 11) ||
                 (x >= defender.get_x() + 16 && x <= defender.get_x() + 19) ||
                 (x >= defender.get_x() + 24 && x <= defender.get_x() + 27))) {
@@ -455,7 +463,7 @@ class SoccerBall: public Moveable, public Drawable {
             if (y > 0) {
                 y--;
             } else {
-                shot = false;
+                reset();
             }
         }
 
@@ -504,7 +512,6 @@ class Player: public Moveable, public Drawable {
             ball.shoot(x + 1, y + 2 - num_shots);
             if (!unlimited_shots) {
                 num_shots--;
-                Serial.println(num_shots);
                 draw();
             }
         }
@@ -566,7 +573,7 @@ class Game {
 
         Game() {
             // initialize level
-            level = 7;
+            level = 5;
             // initialize time
             time = 0;
         }
@@ -600,7 +607,6 @@ class Game {
                 ball.reset();
                 // shoot the ball after press the button
                 player.shoot(ball);
-                Serial.println(player.get_num_shots());
                 time = millis();
             }
             //  move soccer ball
@@ -612,30 +618,23 @@ class Game {
                     // move ball                  
                     ball.move();
 
-                } else {
-
-                    ball.reset();
-
-                }
+                } 
             }
 
             // move defenders
 
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
+                if (ball.has_hit_defender(defenders[i])) {
+                    ball.reset_with_color(RED);
+                }
+                
                 if (defenders[i].ready_to_act(current_time)) {
 
                     defenders[i].move();
 
                 }
 
-                if (ball.has_hit_defender(defenders[i])) {
-
-                    ball.reset();
-
-                    defenders[i].draw();
-
-                }
             }
 
             // move the net
@@ -798,10 +797,10 @@ class Game {
 
         case 6:
 
-            player.allow_unlimited_shots(false);
+            player.allow_unlimited_shots(true);
             player.set_num_shots(3);
             // set the speed of soccer
-            ball.set_speed(6);
+            ball.set_speed(16);
             // move soccer
             ball.set_can_move(true);
             // set the speed of the net
@@ -882,7 +881,13 @@ class Game {
 
         // TODO:
         // assume there is getter in player class
+        initialize_time_counter();
+        initialize_move_status();
 
+        if (level > 6) {
+          return;
+        }
+        
         // clear board
         matrix.fillScreen(BLACK.to_333());
         // print messages
@@ -891,9 +896,6 @@ class Game {
 
         // fill the screen with black
         matrix.fillScreen(BLACK.to_333());
-
-        initialize_time_counter();
-        initialize_move_status();
 
         // draw player
         draw_player();
