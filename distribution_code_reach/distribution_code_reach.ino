@@ -366,6 +366,7 @@ class SoccerBall : public Moveable, public Drawable {
     }
 
     void reset() {
+      erase();
       initialize(99,99);
       shot = false;
     }
@@ -447,6 +448,12 @@ class Player : public Moveable, public Drawable {
       initialize(14, 14);
     }
 
+    void reset(int xval) {
+       erase();
+       x = xval;
+       draw();
+    }
+
     void allow_unlimited_shots(bool allow) {
       unlimited_shots = allow;
     }
@@ -454,10 +461,8 @@ class Player : public Moveable, public Drawable {
     void shoot(SoccerBall& ball) {
       if (!ball.has_been_shot()) {
         ball.shoot(x + 1, y + 2 - num_shots);
-        Serial.println("Shot");
         if (!unlimited_shots) {
           num_shots--;
-          Serial.println(num_shots);
           draw();
         }
       }
@@ -468,6 +473,10 @@ class Player : public Moveable, public Drawable {
       return num_shots;
     }
 
+    int set_num_shots(int shots) {
+      num_shots = shots;
+    }
+    
 
     void move() {
       // record timestamp
@@ -539,17 +548,14 @@ class Game {
       if (!level_cleared()) {
         
         // detect the movement of player
-        player.erase();
-        player.set_x(parsePotentiometerValue(potentiometer_value));
-        player.draw();
+        player.reset(parse_potentiometer_value(potentiometer_value));
         // check if button is pressed
-        if (button_pressed){
+        if (button_pressed && ball.ready_to_act(current_time)){
           // erase the previous ball
-          ball.erase();
+          ball.reset();
           // shoot the ball after press the button
           player.shoot(ball);
         }
-
             //  move soccer ball
               if (ball.ready_to_act(current_time)) {
 
@@ -559,7 +565,7 @@ class Game {
                     
                   }else {
 
-                      ball.erase();
+                    ball.reset();
                   
                   }
               }
@@ -572,13 +578,13 @@ class Game {
                         
                         defenders[i].move();
 
-                      
                     }
 
                     if (ball.has_hit_defender(defenders[i])) {
-
-                        ball.erase();
+                        
                         ball.reset();
+
+                        defenders[i].draw();
                           
                     }
                 }
@@ -664,6 +670,7 @@ class Game {
 
             if (level == 2) {
                 player.allow_unlimited_shots(false);
+                player.set_num_shots(5);
                 // set the speed of soccer
                 ball.set_speed(3);
                 // move soccer
@@ -681,6 +688,7 @@ class Game {
 
             if (level == 3) {
                 player.allow_unlimited_shots(false);
+                player.set_num_shots(5);
                 // set the speed of soccer
                 ball.set_speed(3);
                 // move soccer
@@ -701,7 +709,7 @@ class Game {
             }
         }
 
-    int parsePotentiometerValue(int value) {
+    int parse_potentiometer_value(int value) {
 
       int val = value / 32;
 
