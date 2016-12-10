@@ -324,10 +324,10 @@ class Net: public Moveable, public Drawable {
 
     public:
 
-        Net(bool move = false): Moveable(move),
-    Drawable() {
+        Net(bool move = false): Moveable(move),Drawable() {
         // set coordinates of the upper left pixel of the net
         initialize(11, 0);
+        seedRandom();
     }
 
     void reset() {
@@ -342,7 +342,10 @@ class Net: public Moveable, public Drawable {
     bool has_been_goaled() const {
         return goaled;
     }
-
+     
+     void allow_net_to_expand (bool expand) {
+      expandable = expand;
+     }
     void move() {
         // record timestamp
         Moveable::timestamp();
@@ -350,10 +353,13 @@ class Net: public Moveable, public Drawable {
         erase();
 
         if (can_move()) {
-            if ((x >= 0) && (x <= 25)) {
+          width = predict_width();
+          
+            if ((x >= 0) && (x <= 31-(width + 1))) {
                 if (move_right) {
                     x++;
-                    if (x == 25) {
+                   
+                    if (x >= 31-(width + 1)) {
                         move_right = false;
                     }
                 } else {
@@ -369,30 +375,95 @@ class Net: public Moveable, public Drawable {
 
     }
 
+    void seedRandom() {
+
+      static const uint32_t salt = 937;
+      union{
+        uint32_t i;
+        uint8_t b[4];
+      }
+      raw;
+
+      int8_t i;
+      unsigned int seed;
+
+      for (i = 0; i < sizeof(raw.b); ++i) {
+        raw.b[i] = EEPROM.read(i);
+      }
+
+      do {
+        raw.i += salt;
+        seed = raw.i & 0x7FFFFFFF;
+      }
+      while ((seed < 1) || (seed > 2147483646));
+
+      randomSeed(seed);
+
+      for (i = 0; i < sizeof(raw.b); ++i) {
+        EEPROM.write(i, raw.b[i]);
+      }
+
+    }
+
+    int predict_width() {
+      
+     int proposed_width = random(2, 6);
+      int copy_x_coordinate = x;
+      int out_of_bound_width = 0;
+      if (!expandable) {
+        return 5;
+      }
+      if (move_right) {
+          if (copy_x_coordinate + proposed_width + 1  > 31) {
+             out_of_bound_width = (copy_x_coordinate + proposed_width) - 31;
+             if ((proposed_width - out_of_bound_width) < 2) {
+                return 2;
+                
+             }
+             else {
+                return proposed_width - out_of_bound_width + 1;
+             }
+          }
+          else{
+            return proposed_width;
+          }
+        }
+        else {
+            return proposed_width;
+        }
+    }
+    
+
+    int get_width() {
+      return width;
+    }
+
     void draw() {
         // (x, y) represents the upper left pixel of the net
-        for (int i = 0; i <= 6; ++i) {
+        for (int i = 0; i <= (width + 1); ++i) {
             draw_with_color(x + i, y, WHITE);
         }
 
         draw_with_color(x, y + 1, WHITE);
-        draw_with_color(x + 6, y + 1, WHITE);
+        draw_with_color(x + width + 1, y + 1, WHITE);
     }
 
     void erase() {
         // (x, y) represents the upper left pixel of the net
-        for (int i = 0; i <= 6; ++i) {
+        for (int i = 0; i <= (width + 1); ++i) {
             draw_with_color(x + i, y, BLACK);
         }
 
         draw_with_color(x, y + 1, BLACK);
-        draw_with_color(x + 6, y + 1, BLACK);
+        draw_with_color(x + (width + 1) , y + 1, BLACK);
     }
 
     private:
 
         bool goaled = false;
     bool move_right = true;
+    int width = 5;
+    bool expandable = false;
 
 };
 
@@ -445,7 +516,7 @@ class SoccerBall: public Moveable, public Drawable {
     }
 
     bool has_hit_net(Net & net) {
-        if ((y == 1) && (x >= net.get_x() + 1) && (x <= net.get_x() + 5)) {
+        if ((y == 1) && (x >= net.get_x() + 1) && (x <= net.get_x() + net.get_width())) {
             shot = false;
             return true;
         } else {
@@ -484,6 +555,20 @@ class SoccerBall: public Moveable, public Drawable {
 
         bool shot;
 
+};
+
+// Cannonball
+class Cannonball: public Moveable, public Drawable {
+
+
+      public:
+
+          Cannonball(bool move = true): Moveable(move),
+      Drawable() {
+        // set coordinates of the left pixel of 
+      }
+   
+   
 };
 
 // Player
@@ -573,7 +658,7 @@ class Game {
 
         Game() {
             // initialize level
-            level = 5;
+            level = 0;
             // initialize time
             time = 0;
         }
@@ -644,7 +729,7 @@ class Game {
 
             // move the net
             if (net.ready_to_act(current_time)) {
-
+               ;
                 net.move();
 
             }
@@ -706,7 +791,11 @@ class Game {
             ball.set_can_move(true);
             // set the speed of soccer
             ball.set_speed(6);
-            net.set_can_move(false);
+            net.set_can_move(true);
+            net.set_speed(3);
+            // allow net to expand
+            net.allow_net_to_expand(false);
+            
             // move defenders
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
@@ -725,7 +814,12 @@ class Game {
             ball.set_speed(6);
             // move soccer
             ball.set_can_move(true);
-            net.set_can_move(false);
+            net.set_can_move(true);
+            net.set_speed(3);
+            // allow net to expand
+            net.allow_net_to_expand(true);
+            net.set_speed(1);
+            
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
                 defenders[i].set_can_move(true);
@@ -747,6 +841,9 @@ class Game {
             net.set_speed(2);
             // move the net
             net.set_can_move(true);
+            // allow net to expand
+            net.allow_net_to_expand(true);
+            
 
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
@@ -769,7 +866,9 @@ class Game {
             net.set_speed(4);
             // move the net
             net.set_can_move(true);
-
+            // allow net to expand
+            net.allow_net_to_expand(true);
+            
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
                 defenders[i].set_can_move(true);
@@ -791,6 +890,9 @@ class Game {
             net.set_speed(4);
             // move the net
             net.set_can_move(true);
+            // allow net to expand
+            net.allow_net_to_expand(true);
+            
 
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
@@ -813,6 +915,9 @@ class Game {
             net.set_speed(4);
             // move the net
             net.set_can_move(true);
+            // allow net to expand
+            net.allow_net_to_expand(true);
+           
 
             for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
@@ -961,3 +1066,4 @@ void loop() {
 
     game.loop(potentiometer_value, button_pressed);
 }
+
