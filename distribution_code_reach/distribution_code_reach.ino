@@ -409,28 +409,24 @@ class Net: public Moveable, public Drawable {
       
      int proposed_width = random(2, 6);
       int copy_x_coordinate = x;
-      int out_of_bound_width = 0;
+      
       if (!expandable) {
         return 5;
       }
-      if (move_right) {
-          if (copy_x_coordinate + proposed_width + 1  > 31) {
-             out_of_bound_width = (copy_x_coordinate + proposed_width) - 31;
-             if ((proposed_width - out_of_bound_width) < 2) {
-                return 2;
-                
-             }
-             else {
-                return proposed_width - out_of_bound_width + 1;
-             }
-          }
-          else{
-            return proposed_width;
-          }
-        }
-        else {
-            return proposed_width;
-        }
+
+      if (copy_x_coordinate + proposed_width + 1  > 31) {
+
+        proposed_width = 31 - copy_x_coordinate -1;
+
+        move_right = false;
+
+        return proposed_width;
+      }
+
+      else {
+        return proposed_width;
+      }
+     
     }
     
 
