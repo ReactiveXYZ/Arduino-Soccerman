@@ -30,7 +30,7 @@ class Server(object):
 
 	def __init__(self):
 		
-		# self.client = Client(PORT_CONTROL)
+		self.client = Client(PORT_CONTROL)
 		pass
 
 	def get_ch(self):
@@ -50,11 +50,11 @@ class Server(object):
 			ch = self.get_ch()
 			if ch != '' : break
 		if ch == KEY_LEFT:
-			print "Left pressed"
+			self.client.write("L")
 		elif ch == KEY_RIGHT:
-			print "Right pressed"
+			self.client.write("R")
 		elif ch == KEY_ATTACK:
-			print "Space pressed"
+			self.client.write("S")
 		elif ch == KEY_QUIT:
 			print "Quiting..."
 			exit()

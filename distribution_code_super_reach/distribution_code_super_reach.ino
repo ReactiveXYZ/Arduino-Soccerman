@@ -344,92 +344,86 @@ class Commander {
 
 	public:
 
-		Commander() {}
+		Commander(Defender* def, CannonBall* cannon) {
 
-		void set_other_player(Player* player) {
+			this->defender = def;
 
-			pla_other = player;
-
-		}
-
-		void set_other_soccer_ball(SoccerBall* ball) {
-
-			soc_other = ball;
+			this->cannon = cannon;
 
 		}
 
-		void send_movement(Drawable* object) {
+		act() {
 
-	      // construct message to send
-	      String obj_name = object->get_object_class_name();
+			char action = this->read_message();
 
-	      String x = String(object->get_x());
+			switch (action) {
 
-	      String y = String(object->get_y());
+				case 'L':
 
-	      String message = obj_name + " " + x + " " + y + "\n";
+					// move defender one to the left
+					this->defender->erase();
 
-	      // write the message 
-	      Serial.write(message.c_str());
+					if (this->defender->get_x() < 0) {
 
-	      // delete pointer
-	      delete object;
+						this->defender->set_x(0);
 
-	  	}
+					} else {
 
-		void read_movement() {
+						this->defender->set_x(defender.get_x() - 1);
 
-		  	if (Serial.available() > 0) {
+					}
 
-		  		String message = Serial.readStringUntil('\n');
+					this->defender->draw();
 
-		        // extract parameters
-		        int sp1 = message.indexOf(' ');
+					break;
 
-		        String obj_name = message.substring(0, sp1);
+				case 'R':
 
-		        int sp2 = message.indexOf(' ', sp1 + 1);
+					// move defender one to the right
+					this->defender->move();
 
-		        int x_coord = message.substring(sp1 + 1, sp2).toInt();
+					break;
 
-		        int y_coord = message.substring(sp2 + 1).toInt();
+				case 'S':
 
-		        // apply movements
-		        if (obj_name == "pla") {
+					// let the defender shoot a cannonball
+					this->defender->shoot(*cannon);
 
-		          // redraw player
-		          pla_other->erase();
-		          pla_other->initialize(x_coord, y_coord);
-		          pla_other->redraw();
+					break;
 
-		      	}
-
-		      	if (obj_name == "soc") {
-
-		          // redraw soccer ball
-		          soc_other->erase();
-		          soc_other->initialize(x_coord, y_coord);
-		          soc_other->redraw();
-
-		  		}
-
-		  	}
+			}
 
 		}
 
-		~Commander() {
-	      // remove dangling pointers
-	      delete pla_other;
-	      delete soc_other;
+		~Commander(){
 
-	  	}
+			delete this->defender;
 
-  	private:
+			delete this->cannon;
 
-  		Player* pla_other;
-  		SoccerBall* soc_other;
+		}
 
-};
+	private:
+
+		char read_message() {
+
+			char ch = '';
+
+			if (Serial.available() > 0) {
+
+				ch = Serial.read();
+
+			}
+
+			return ch;
+
+		} 
+
+		Defender* defender;
+
+		CannonBall* cannon;
+
+}
 
 // Game
 class Game {
