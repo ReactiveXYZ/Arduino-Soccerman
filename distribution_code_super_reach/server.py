@@ -3,7 +3,7 @@ import serial
 import sys, tty, termios
 
 PORT_CONTROL = "/dev/cu.usbmodem1411"
-PORT_TIME_OUT = 0.1
+PORT_TIME_OUT = 0.05
 
 KEY_LEFT = 'a'
 KEY_RIGHT = 'd'

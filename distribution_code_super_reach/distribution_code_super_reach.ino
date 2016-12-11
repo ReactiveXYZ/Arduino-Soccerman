@@ -344,15 +344,9 @@ class Commander {
 
 	public:
 
-		Commander(Defender* def, CannonBall* cannon) {
+		Commander() {}
 
-			this->defender = def;
-
-			this->cannon = cannon;
-
-		}
-
-		act() {
+		interact_with(Drawable& defender, CannonBall& cannon) {
 
 			char action = this->read_message();
 
@@ -361,57 +355,52 @@ class Commander {
 				case 'L':
 
 					// move defender one to the left
-					this->defender->erase();
+					defender.erase();
 
-					if (this->defender->get_x() < 0) {
+					if (defender.get_x() < 0) {
 
-						this->defender->set_x(0);
+						defender.set_x(0);
 
 					} else {
 
-						this->defender->set_x(defender.get_x() - 1);
+						defender.set_x(defender.get_x() - 1);
 
 					}
 
-					this->defender->draw();
+					defender.draw();
 
 					break;
 
 				case 'R':
 
 					// move defender one to the right
-					this->defender->erase();
+					defender.erase();
 
-					if (this->defender->get_x() > 26) {
+					if (defender.get_x() > 26) {
 
-						this->defender->set_x(26);
+						defender.set_x(26);
 
 					} else {
 
-						this->defender->set_x(defender.get_x() + 1);
+						defender.set_x(defender.get_x() + 1);
 
 					}
 
-					this->defender->draw();
+					defender.draw();
 
 					break;
 
 				case 'S':
 
 					// let the defender shoot a cannonball
-					this->defender->shoot(*cannon);
+					defender.shoot(cannon);
 
 					break;
 
+				default:
+					break;
+
 			}
-
-		}
-
-		~Commander(){
-
-			delete this->defender;
-
-			delete this->cannon;
 
 		}
 
@@ -430,10 +419,6 @@ class Commander {
 			return ch;
 
 		} 
-
-		Defender* defender;
-
-		CannonBall* cannon;
 
 }
 

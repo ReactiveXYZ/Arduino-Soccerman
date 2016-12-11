@@ -257,68 +257,6 @@ class Drawable {
 
 };
 
-// Defender
-class Defender: public Moveable, public Drawable {
-
-    public:
-
-        Defender(bool move = false): Moveable(move),
-    Drawable() {
-        // set coordinates of the most left pixel of the current defender
-        initialize(4, 3);
-    }
-
-    void set_index(int i) {
-        index = i;
-        move_left = false;
-    }
-
-    void move() {
-        // record timestamp
-        Moveable::timestamp();
-        erase();
-
-        if (can_move()) {
-
-            if ((x >= 8 * index) && (x <= 8 * index + 4)) {
-                if (move_left) {
-                    x--;
-                    if (x == 8 * index) {
-                        move_left = false;
-                    }
-                } else {
-                    x++;
-                    if (x == 8 * index + 4) {
-                        move_left = true;
-                    }
-                }
-            }
-        }
-
-        draw();
-    }
-
-    void draw() {
-        // (x, y) represents the most left pixel of the current defender
-        draw_with_color(x, y, RED);
-        draw_with_color(x + 1, y, RED);
-        draw_with_color(x + 2, y, RED);
-        draw_with_color(x + 3, y, RED);
-    }
-
-    void erase() {
-        // (x, y) represents the most left pixel of the current defender
-        draw_with_color(x, y, BLACK);
-        draw_with_color(x + 1, y, BLACK);
-        draw_with_color(x + 2, y, BLACK);
-        draw_with_color(x + 3, y, BLACK);
-    }
-
-    private: bool move_left = false;
-    int index;
-
-};
-
 // Net
 class Net: public Moveable, public Drawable {
 
@@ -463,6 +401,83 @@ class Net: public Moveable, public Drawable {
 
 };
 
+// Cannonball
+class CannonBall: public Moveable, public Drawable {
+
+
+      public:
+
+          CannonBall(bool move = true): Moveable(move),
+      Drawable() {
+        // set coordinates of the left pixel of 
+      }
+   
+   
+};
+// Defender
+class Defender: public Moveable, public Drawable {
+
+    public:
+
+        Defender(bool move = false): Moveable(move),
+    Drawable() {
+        // set coordinates of the most left pixel of the current defender
+        initialize(4, 3);
+    }
+
+    void set_index(int i) {
+        index = i;
+        move_left = false;
+    }
+
+    void move() {
+        // record timestamp
+        Moveable::timestamp();
+        erase();
+
+        if (can_move()) {
+
+            if ((x >= 8 * index) && (x <= 8 * index + 4)) {
+                if (move_left) {
+                    x--;
+                    if (x == 8 * index) {
+                        move_left = false;
+                    }
+                } else {
+                    x++;
+                    if (x == 8 * index + 4) {
+                        move_left = true;
+                    }
+                }
+            }
+        }
+
+        draw();
+    }
+
+    void shoot(CannonBall& ball){}
+
+    void draw() {
+        // (x, y) represents the most left pixel of the current defender
+        draw_with_color(x, y, RED);
+        draw_with_color(x + 1, y, RED);
+        draw_with_color(x + 2, y, RED);
+        draw_with_color(x + 3, y, RED);
+    }
+
+    void erase() {
+        // (x, y) represents the most left pixel of the current defender
+        draw_with_color(x, y, BLACK);
+        draw_with_color(x + 1, y, BLACK);
+        draw_with_color(x + 2, y, BLACK);
+        draw_with_color(x + 3, y, BLACK);
+    }
+
+    private: bool move_left = false;
+    int index;
+
+};
+
 // Soccer ball
 class SoccerBall: public Moveable, public Drawable {
 
@@ -553,20 +568,6 @@ class SoccerBall: public Moveable, public Drawable {
 
 };
 
-// Cannonball
-class Cannonball: public Moveable, public Drawable {
-
-
-      public:
-
-          Cannonball(bool move = true): Moveable(move),
-      Drawable() {
-        // set coordinates of the left pixel of 
-      }
-   
-   
-};
-
 // Player
 class Player: public Moveable, public Drawable {
 
@@ -648,6 +649,90 @@ class Player: public Moveable, public Drawable {
 
 };
 
+// Commander
+class Commander {
+
+  public:
+
+    Commander() {}
+
+    interact_with(Defender& defender, CannonBall& cannon) {
+
+      char action = this->read_message();
+      
+      switch (action) {
+
+        case 'L':
+
+          // move defender one to the left
+          defender.erase();
+
+          if (defender.get_x() < 0) {
+
+            defender.set_x(0);
+
+          } else {
+
+            defender.set_x(defender.get_x() - 1);
+
+          }
+
+          defender.draw();
+
+          break;
+
+        case 'R':
+
+          // move defender one to the right
+          defender.erase();
+
+          if (defender.get_x() > 26) {
+
+            defender.set_x(26);
+
+          } else {
+
+            defender.set_x(defender.get_x() + 1);
+
+          }
+
+          defender.draw();
+
+          break;
+
+        case 'S':
+
+          // let the defender shoot a cannonball
+          defender.shoot(cannon);
+
+          break;
+
+        default:
+          break;
+
+      }
+
+    }
+
+  private:
+
+    char read_message() {
+
+      char ch = ' ';
+
+      if (Serial.available() > 0) {
+
+        ch = Serial.read();
+
+      }
+
+      return ch;
+
+    } 
+
+};
+
+
 // Game
 class Game {
     public:
@@ -665,7 +750,7 @@ class Game {
     }
 
     void loop(int potentiometer_value, bool button_pressed) {
-
+        
         // TODO:
         // check how many shots player has
         if (player.get_num_shots() < 1) {
