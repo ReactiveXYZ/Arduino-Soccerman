@@ -1,12 +1,16 @@
 import serial
 
-PORT_PLAYER_ONE = "/dev/cu.usbmodem1411"
-PORT_PLAYER_TWO = "/dev/cu.usbmodem1421"
+import sys, tty, termios
 
+PORT_CONTROL = "/dev/cu.usbmodem1411"
 PORT_TIME_OUT = 0.1
 
+KEY_LEFT = 'a'
+KEY_RIGHT = 'd'
+KEY_QUIT = 'q'
+KEY_ATTACK = 'j'
 
-class Player(object):
+class Client(object):
 
 	def __init__(self, port):
 		
@@ -26,28 +30,38 @@ class Server(object):
 
 	def __init__(self):
 		
-		self.player1 = Player(PORT_PLAYER_ONE)
-		self.player2 = Player(PORT_PLAYER_TWO)
+		# self.client = Client(PORT_CONTROL)
+		pass
+
+	def get_ch(self):
+		fd = sys.stdin.fileno()
+		old_settings = termios.tcgetattr(fd)
+		try:
+			tty.setraw(sys.stdin.fileno())
+			ch = sys.stdin.read(1)
+		finally:
+			termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+		return ch
 
 	def startCommunication(self):
 		
 		while (True):
-			
-			p1msg = self.player1.read()
-
-			p2msg = self.player2.read()
-
-			if p1msg:
-			 	
-			 	#print "from player1: " + str(p1msg)
-			 	self.player2.write(p1msg)
-
-			if p2msg:
-				
-				#print "from player2: " + str(p2msg)
-				self.player1.write(p2msg)
+			# detected key presses
+			ch = self.get_ch()
+			if ch != '' : break
+		if ch == KEY_LEFT:
+			print "Left pressed"
+		elif ch == KEY_RIGHT:
+			print "Right pressed"
+		elif ch == KEY_ATTACK:
+			print "Space pressed"
+		elif ch == KEY_QUIT:
+			print "Quiting..."
+			exit()
 
 
 server = Server()
 
-server.startCommunication();
+if __name__ == '__main__':
+	while True:
+		server.startCommunication();
