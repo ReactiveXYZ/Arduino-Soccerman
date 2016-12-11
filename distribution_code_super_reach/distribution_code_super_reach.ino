@@ -380,7 +380,19 @@ class Commander {
 				case 'R':
 
 					// move defender one to the right
-					this->defender->move();
+					this->defender->erase();
+
+					if (this->defender->get_x() > 26) {
+
+						this->defender->set_x(26);
+
+					} else {
+
+						this->defender->set_x(defender.get_x() + 1);
+
+					}
+
+					this->defender->draw();
 
 					break;
 
