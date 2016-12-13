@@ -19,6 +19,9 @@ const int RESTART_PIN_NUMBER = 11;
 // define the number of defenders in a game
 const int NUM_DEFENDERS = 4;
 
+// define the number of cannons that defendes can shoot in total
+const int NUM_CANNONS = 2;
+
 // define the matrix that represents the LED screen
 RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
 
@@ -257,6 +260,7 @@ class Drawable {
 
 };
 
+
 // Net
 class Net: public Moveable, public Drawable {
 
@@ -347,24 +351,28 @@ class Net: public Moveable, public Drawable {
       
      int proposed_width = random(2, 6);
       int copy_x_coordinate = x;
-      
+      int out_of_bound_width = 0;
       if (!expandable) {
         return 5;
       }
-
-      if (copy_x_coordinate + proposed_width + 1  > 31) {
-
-        proposed_width = 31 - copy_x_coordinate -1;
-
-        move_right = false;
-
-        return proposed_width;
-      }
-
-      else {
-        return proposed_width;
-      }
-     
+      if (move_right) {
+          if (copy_x_coordinate + proposed_width + 1  > 31) {
+             out_of_bound_width = (copy_x_coordinate + proposed_width + 1) - 31;
+             if ((proposed_width - out_of_bound_width) < 2) {
+                return 2;
+                
+             }
+             else {
+                return proposed_width - out_of_bound_width + 1;
+             }
+          }
+          else{
+            return proposed_width;
+          }
+        }
+        else {
+            return proposed_width;
+        }
     }
     
 
@@ -398,83 +406,6 @@ class Net: public Moveable, public Drawable {
     bool move_right = true;
     int width = 5;
     bool expandable = false;
-
-};
-
-// Cannonball
-class CannonBall: public Moveable, public Drawable {
-
-
-      public:
-
-          CannonBall(bool move = true): Moveable(move),
-      Drawable() {
-        // set coordinates of the left pixel of 
-      }
-   
-   
-};
-// Defender
-class Defender: public Moveable, public Drawable {
-
-    public:
-
-        Defender(bool move = false): Moveable(move),
-    Drawable() {
-        // set coordinates of the most left pixel of the current defender
-        initialize(4, 3);
-    }
-
-    void set_index(int i) {
-        index = i;
-        move_left = false;
-    }
-
-    void move() {
-        // record timestamp
-        Moveable::timestamp();
-        erase();
-
-        if (can_move()) {
-
-            if ((x >= 8 * index) && (x <= 8 * index + 4)) {
-                if (move_left) {
-                    x--;
-                    if (x == 8 * index) {
-                        move_left = false;
-                    }
-                } else {
-                    x++;
-                    if (x == 8 * index + 4) {
-                        move_left = true;
-                    }
-                }
-            }
-        }
-
-        draw();
-    }
-
-    void shoot(CannonBall& ball){}
-
-    void draw() {
-        // (x, y) represents the most left pixel of the current defender
-        draw_with_color(x, y, RED);
-        draw_with_color(x + 1, y, RED);
-        draw_with_color(x + 2, y, RED);
-        draw_with_color(x + 3, y, RED);
-    }
-
-    void erase() {
-        // (x, y) represents the most left pixel of the current defender
-        draw_with_color(x, y, BLACK);
-        draw_with_color(x + 1, y, BLACK);
-        draw_with_color(x + 2, y, BLACK);
-        draw_with_color(x + 3, y, BLACK);
-    }
-
-    private: bool move_left = false;
-    int index;
 
 };
 
@@ -514,7 +445,7 @@ class SoccerBall: public Moveable, public Drawable {
         y = y_arg;
     }
 
-    bool has_hit_defender(Defender & defender) {
+    bool has_hit_defender(Drawable & defender) {
         if ((y == defender.get_y()) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
                 (x >= defender.get_x() + 8 && x <= defender.get_x() + 11) ||
                 (x >= defender.get_x() + 16 && x <= defender.get_x() + 19) ||
@@ -568,6 +499,7 @@ class SoccerBall: public Moveable, public Drawable {
 
 };
 
+
 // Player
 class Player: public Moveable, public Drawable {
 
@@ -579,10 +511,16 @@ class Player: public Moveable, public Drawable {
         initialize(14, 14);
     }
 
-    void reset(int xval) {
+    void reset(int x_val) {
         erase();
-        x = xval;
+        x = x_val;
         draw();
+    }
+
+    void die() {
+
+        dead = true;
+
     }
 
     void allow_unlimited_shots(bool allow) {
@@ -645,93 +583,198 @@ class Player: public Moveable, public Drawable {
     private:
 
         bool unlimited_shots = false;
-    int num_shots = 5;
+        bool dead = false;
+        int num_shots = 5;
 
 };
 
-// Commander
-class Commander {
+// Cannonball
+class CannonBall: public Moveable, public Drawable {
 
-  public:
 
-    Commander() {}
+      public:
 
-    interact_with(Defender& defender, CannonBall& cannon) {
-
-      char action = this->read_message();
-      
-      switch (action) {
-
-        case 'L':
-
-          // move defender one to the left
-          defender.erase();
-
-          if (defender.get_x() < 0) {
-
-            defender.set_x(0);
-
-          } else {
-
-            defender.set_x(defender.get_x() - 1);
-
-          }
-
-          defender.draw();
-
-          break;
-
-        case 'R':
-
-          // move defender one to the right
-          defender.erase();
-
-          if (defender.get_x() > 26) {
-
-            defender.set_x(26);
-
-          } else {
-
-            defender.set_x(defender.get_x() + 1);
-
-          }
-
-          defender.draw();
-
-          break;
-
-        case 'S':
-
-          // let the defender shoot a cannonball
-          defender.shoot(cannon);
-
-          break;
-
-        default:
-          break;
-
+          CannonBall(bool move = true): Moveable(move), Drawable() {
+        // set coordinates of the left pixel of the cannonball
+        initialize(99, 99);
       }
+      void reset() {
+        erase();
+        initialize(99, 99);
+        shot = false;
+        draw();
+      }
+
+      bool has_been_shot() const {
+        return shot;
+      }
+
+
+      void move() {
+        // record timestamp
+        Moveable::timestamp();
+
+        erase();
+
+        if (can_move()) {
+          if (y < 15) {
+            y++;
+          }
+          else {
+            reset();
+          }
+        }
+
+        draw();
+      }
+
+      void draw() {
+        draw_with_color(x, y, PURPLE);
+        draw_with_color(x, y + 1, PURPLE);
+        draw_with_color(x + 1, y, PURPLE);
+        draw_with_color(x + 1, y + 1, PURPLE);
+      }
+
+      void erase() {
+        draw_with_color(x, y, BLACK);
+        draw_with_color(x, y + 1, BLACK);
+        draw_with_color(x + 1, y, BLACK);
+        draw_with_color(x + 1, y + 1, BLACK);
+      }
+
+      bool has_hit_player(Player& player) {
+        if (x == player.get_x() && y + 1 == player.get_y()  ||
+            x == player.get_x() + 2 && y + 1 == player.get_y() || 
+            x == player.get_x() + 1 && y + 1 == 15 - player.get_num_shots() + 1 ||
+            x + 2 == player.get_x() && y + 1 == player.get_y()  ||
+            x + 2 == player.get_x() + 2 && y + 1 == player.get_y() || 
+            x + 2 == player.get_x() + 1 && y + 1 == 15 - player.get_num_shots() + 1) {
+              return true;
+            }
+            else {
+              return false;
+            }
+            
+      }
+
+      void shoot(int x_val, int y_val) {
+        x = x_val;
+        y = y_val;
+        shot = true;
+      }
+
+      bool has_hit_soccer(Drawable& ball) {
+        if ((x == ball.get_x() || x == ball.get_x() - 1) && y == ball.get_y()) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
+
+
+      private:
+
+      bool shot = false;
+};
+
+// Defender
+class Defender: public Moveable, public Drawable {
+
+    public:
+    
+    static int shooting_cool_down_time;
+
+    Defender(bool move = false): Moveable(move),
+        Drawable() {
+        // set coordinates of the most left pixel of the current defender
+        initialize(4, 3);
+    }
+
+    static void set_shooting_frequency(int freq) {
+
+        shooting_cool_down_time = 1000 / freq;
+    }
+  
+    void allow_shooting(bool allow) {
+      can_shoot_cannon = allow;
+    }
+
+    bool able_to_shoot() {
+      return can_shoot_cannon;
+    }
+
+    void set_index(int i) {
+        index = i;
+        move_left = false;
+    }
+
+    void move() {
+        // record timestamp
+        Moveable::timestamp();
+        erase();
+
+        if (can_move()) {
+
+            if ((x >= 8 * index) && (x <= 8 * index + 4)) {
+                if (move_left) {
+                    x--;
+                    if (x == 8 * index) {
+                        move_left = false;
+                    }
+                } else {
+                    x++;
+                    if (x == 8 * index + 4) {
+                        move_left = true;
+                    }
+                }
+            }
+        }
+
+        draw();
+    }
+
+    void draw() {
+        // (x, y) represents the most left pixel of the current defender
+        draw_with_color(x, y, RED);
+        draw_with_color(x + 1, y, RED);
+        draw_with_color(x + 2, y, RED);
+        draw_with_color(x + 3, y, RED);
+    }
+
+    void erase() {
+        // (x, y) represents the most left pixel of the current defender
+        draw_with_color(x, y, BLACK);
+        draw_with_color(x + 1, y, BLACK);
+        draw_with_color(x + 2, y, BLACK);
+        draw_with_color(x + 3, y, BLACK);
+    }
+
+    bool ready_to_shoot(int current_time) {
+
+        return current_time - last_shooting_time > shooting_cool_down_time;
 
     }
 
-  private:
+    void shoot(CannonBall & cannon) {
 
-    char read_message() {
+        if (can_shoot_cannon) {
+            // timestamp
+            last_shooting_time = millis();
+            // shoot the cannon
+            cannon.shoot(x + 1, y + 1);
+        }
 
-      char ch = ' ';
+    }
 
-      if (Serial.available() > 0) {
-
-        ch = Serial.read();
-
-      }
-
-      return ch;
-
-    } 
-
+    private:
+        int index;
+        bool move_left = false;
+        bool can_shoot_cannon = false;
+        int last_shooting_time;
 };
 
+int Defender::shooting_cool_down_time = 0;
 
 // Game
 class Game {
@@ -743,6 +786,7 @@ class Game {
             // initialize time
             time = 0;
         }
+        seedRandom();
 
     void setup() {
         time = millis();
@@ -750,7 +794,7 @@ class Game {
     }
 
     void loop(int potentiometer_value, bool button_pressed) {
-        
+
         // TODO:
         // check how many shots player has
         if (player.get_num_shots() < 1) {
@@ -778,6 +822,7 @@ class Game {
                 ball.reset();
                 // shoot the ball after press the button
                 player.shoot(ball);
+                Serial.println("SHOOT BALL");
                 time = millis();
             }
             //  move soccer ball
@@ -810,7 +855,7 @@ class Game {
 
             // move the net
             if (net.ready_to_act(current_time)) {
-               ;
+               
                 net.move();
 
             }
@@ -822,6 +867,62 @@ class Game {
                 ball.reset();
 
             }
+
+            // enable defender's shooting behavior
+            int num_cannon_to_shoot = 2;
+
+            int attackers[NUM_CANNONS] = {random(0,4), random(0,4)};
+
+            // when two attackers are the same -> enable one
+            if (attackers[0] == attackers[1]) {
+
+                num_cannon_to_shoot = 1;
+
+            }
+
+            for (int i = 0; i < NUM_CANNONS; i ++) {
+
+                // see if which cannon can be shot
+                if (!cannons[i].has_been_shot() && defenders[attackers[i]].ready_to_shoot(current_time) 
+                     && defenders[attackers[i]].able_to_shoot() && num_cannon_to_shoot > 0) {
+                    
+                    defenders[attackers[i]].shoot(cannons[i]);
+                    num_cannon_to_shoot --;
+
+                }
+
+                // when ball is fired
+                if (cannons[i].has_been_shot()) {
+
+                    // move the ball when necessary
+                    if (cannons[i].ready_to_act(current_time)) {
+  
+                        cannons[i].move();
+
+                    }
+
+                    // detected collisions
+                    if (cannons[i].has_hit_player(player)) {
+
+                        player.die();
+
+                    }
+
+                    if (cannons[i].has_hit_soccer(ball)) {
+
+                        cannons[i].reset();
+                        
+                        ball.reset();
+
+                    }
+
+                }
+
+                
+
+            }
+
+
 
         } else {
 
@@ -840,6 +941,7 @@ class Game {
     SoccerBall ball;
     Defender defenders[NUM_DEFENDERS];
     Net net;
+    CannonBall cannons[NUM_CANNONS];
     int time;
     int prev_potentiometer_value = 512;
 
@@ -849,9 +951,18 @@ class Game {
         player.set_initial_action_time(time);
         // for soccer ball
         ball.set_initial_action_time(time);
+        
         // for all defenders
         for (int i = 0; i < NUM_DEFENDERS; i++) {
+
             defenders[i].set_initial_action_time(time);
+
+        }
+        // for all cannons
+        for (int i = 0; i < NUM_CANNONS; i++) {
+
+            cannons[i].set_initial_action_time(time);
+
         }
 
     }
@@ -876,15 +987,25 @@ class Game {
             net.set_speed(3);
             // allow net to expand
             net.allow_net_to_expand(false);
-            
-            // move defenders
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
 
+            // config cannons
+            for (int i = 0; i < NUM_CANNONS; ++i ){
+              // set cannon speed
+              cannons[i].set_speed(4);
+              
+            }
+            
+            // config defenders
+            for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                // allow defender to move
                 defenders[i].set_can_move(true);
                 // set speed for defenders
                 defenders[i].set_speed(1);
-
+                // allow defender to shoot
+                defenders[i].allow_shooting(true);
             }
+            // set shooting frequency for defenders
+            Defender::set_shooting_frequency(0.1);
             break;
 
         case 2:
@@ -1108,6 +1229,8 @@ class Game {
         reset_level();
 
     }
+
+    
 
     void game_over() {
 
