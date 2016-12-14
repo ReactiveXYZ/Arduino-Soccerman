@@ -163,6 +163,59 @@ class Printer {
             matrix.setTextColor(BLUE.to_333());
             matrix.print('E');
         }
+
+        void greeting() {
+            matrix.drawCircle(6, 7, 5, WHITE.to_333());
+            matrix.fillCircle(6, 7, 5, WHITE.to_333());
+
+            matrix.drawRect(5, 2, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 2, 1, 1, BLUE.to_333());
+            matrix.drawRect(7, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 4, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 4, 1, 1, BLUE.to_333());
+   
+            matrix.drawRect(5, 10, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 10, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(7, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 12, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 12, 1, 1, BLUE.to_333());
+   
+            matrix.drawRect(2, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(2, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(1, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(2, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 7, 1, 1, BLUE.to_333());
+
+            matrix.drawRect(9, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(9, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(8, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(9, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(11, 7, 1, 1, BLUE.to_333());
+   
+            matrix.setCursor(14, 4);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('M');
+
+            matrix.setCursor(20, 4);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('A');
+      
+            matrix.setCursor(26, 5);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('N');       
+        }    
 };
 
 // Abstract class for objects that are moveable
@@ -795,6 +848,9 @@ class Game {
 
         void setup() {
             time = millis();
+            matrix.fillScreen(BLACK.to_333());
+            print.greeting();
+            delay(5000);
             next_level();
         }
 
@@ -1137,6 +1193,10 @@ class Game {
         void reset_level() {
             initialize_time_counter();
             initialize_move_status();
+
+            for (int i = 0; i < NUM_CANNONS; ++i) {
+              cannons[i].reset();
+            }
 
             if (level > 6) {
               return;

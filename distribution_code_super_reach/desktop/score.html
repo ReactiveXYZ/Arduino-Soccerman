@@ -4,38 +4,23 @@
 <head>
 
 	<title>Score</title>
-
+	<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
 	<style type="text/css">
 			
-		* { box-sizing: border-box; }
+		* { 
+			box-sizing: border-box; 
+		}
 
 		body {
 			width: 100%;
 			height: 100%;
 			text-align:center;
 			font-family: 'Helvetica Neue', sans-serif;
+			line-height: normal !important;
 		}
 
 		.title h1{
 			color : #bbb ;
-		}
-
-		#app {
-			height: 20%;
-			width: 30%;
-			margin:auto;
-		}
-
-		.player {
-			margin-top: 200px;
-			margin-right: 100px;
-
-		}
-
-		.defender {
-			margin-top: 200px;
-			margin-left: 100px;
-
 		}
 
 		.seg {
@@ -102,7 +87,7 @@
 		  z-index: 1
 		}
 
-		h3 {
+		p {
 		  margin: 5px 0 0 0;
 		  font-size: 11px;
 		  font-weight: normal;
@@ -129,60 +114,118 @@
 
 <body>
 	
-	<div id="app">
-		<div class="title" v-if="started">
-			<h1>The battle is on!</h1>
-		</div>
-		<div class="title" v-if="!started">
-			<h1>Waiting for the next battle...</h1>
+	<div id="app" class="container">
+
+		<div class="row">
+			<div class="title" v-if="started">
+				<h1>The battle is on!</h1>
+			</div>
+			<div class="title" v-if="!started">
+				<h1>Waiting for the next battle...</h1>
+			</div>
 		</div>
 		
-		<div class="seg player" v-if="started">
-		  	<div class="flip-wrapper">
-			    <div class="flip flip--next">{{ playerScore + 1 }}</div>
-			    <div class="flip flip--top"> {{ playerScore }}</div>
-			    <div class="flip flip--top flip--back">{{ playerScore + 1 }}</div>
-			    <div class="flip flip--bottom"> {{ playerScore }} </div>
-		  	</div>
-		  	<h3>Player Victories</h3>
-		</div>
 
-		<div class="seg defender" v-if="started">
-		  	<div class="flip-wrapper">
-			    <div class="flip flip--next">{{ defenderScore + 1}}</div>
-			    <div class="flip flip--top"> {{ defenderScore }}</div>
-			    <div class="flip flip--top flip--back">{{ defenderScore + 1 }}</div>
-			    <div class="flip flip--bottom"> {{ defenderScore }} </div>
-		  	</div>
-		  	<h3>defender Victories</h3>
-		</div>
+		<div class="row">
+    		<div class="six columns">
+    			<div class="seg player" v-if="started">
+				  	<div class="flip-wrapper">
+					    <div class="flip flip--next">{{ playerScore + 1 }}</div>
+					    <div class="flip flip--top"> {{ playerScore }}</div>
+					    <div class="flip flip--top flip--back">{{ playerScore + 1 }}</div>
+					    <div class="flip flip--bottom"> {{ playerScore }} </div>
+				  	</div>
+				  	<p>Player Victories</p>
+				</div>
+    		</div>
+    		<div class="six columns">
+    			<div class="seg defender" v-if="started">
+				  	<div class="flip-wrapper">
+					    <div class="flip flip--next">{{ defenderScore + 1}}</div>
+					    <div class="flip flip--top"> {{ defenderScore }}</div>
+					    <div class="flip flip--top flip--back">{{ defenderScore + 1 }}</div>
+					    <div class="flip flip--bottom"> {{ defenderScore }} </div>
+				  	</div>
+				  	<p>defender Victories</p>
+				</div>
+    		</div>
+  		</div>
+
+  		<div class="row">
+  			<completion-form v-if="finished"></completion-form>
+  		</div>
+
+  		<div class="row">
+  			<records-table></records-table>
+  		</div>
+		
+		
 
 	</div>
 
-	<script src="http://cdnjs.cloudflare.com/ajax/libs/vue/2.1.5/vue.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/vue/2.1.6/vue.js"></script>
 
-	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+	<script src="http://cdn.socket.io/socket.io-1.4.5.js"></script>
 
 	<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
 
-	<script type="text/x-template" id = "competion-form-template">
+	<script type="text/x-template" id="completion-form-template">
 		
-		<div id="competion-form">
-			<form>
+		<div id="completion-form">
+			<div class="row">
 				<label for="battle-name">
 					Name of this epic battle!
 				</label>
-				<input type="text" name="battle-name" id="battle-name" v-model="battleName">
-				<button v-on:click = "cancel">Yes! Submit</button>
-				<button v-on:click = "submit">No! Boring game!</button>
-			</form>
+				<input class="u-full-width" placeholder="Name" type="text" name="battle-name" id="battle-name" v-model="battleName">
+				<div>
+					<button v-on:click="submit" class="button-primary">Submit! Cool Game!</button>
+					<button v-on:click="cancel">No! Boring Game!</button>
+				</div>
+				
+			</div>
 		</div>
+
+	</script>
+
+	<script type="text/x-template" id="records-table-template">
+		<div class="row">
+
+			<h4>Honour of glory</h4>
+
+			<table class="u-full-width">
+			
+				<thead>
+					<tr>
+						<th>Battle name</th>
+						<th>Player score</th>
+						<th>Defender score</th>
+						<th>Player win rate</th>
+						<th>Defender win rate</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr v-if="recordList.length == 0">
+						Waiting for our first epic battle...
+					</tr>
+					<tr v-for="record in recordList">
+						<td>{{ record['battle_name'] }}</td>
+						<td>{{ record['player_score'] }}</td>
+						<td>{{ record['defender_score'] }}</td>
+						<td>{{ record['player_win_rate'] | toPercentage }}</td>
+						<td>{{ record['defender_win_rate'] | toPercentage }}</td>
+					</tr>
+				</tbody>
+
+			</table>
+		</div>
+		
 
 	</script>
 
 	<script type="text/javascript">
 
-		// Handle record's local storage
+		// Handle records database
 		var Records = function (){
 
 			// storage related
@@ -204,6 +247,20 @@
 			}
 		}
 
+		Records.prototype.all = function() {
+			
+			var records = this.storage.getItem(this.store);
+
+			if (!records) {
+
+				return [];
+
+			}
+
+			return records;
+
+		};
+
 		// data in form of
 		// {
 		//    battleName,
@@ -214,24 +271,42 @@
 			
 			var source = this.storage.getItem(this.store);
 
-			if (source == "") {
+			if (!source) {
 
 				source = [];
 
 			} else {
 
-				source = JSON.parse(this.storage.getItem(this.store));
+				source = this.all();
 			}
 
 			var playerWinRate = parseFloat(data.playerScore / (data.playerScore + data.defenderScore));
 
-			var defenderWinRate = parseFloat(1.0 - playerWinRate);
+			if (!playerWinRate) {
 
-			data[this.sort.PLAYER_WIN_RATE] = playerWinRate;
+				playerWinRate = 0;
 
-			data[this.sort.DEFENDER_WIN_RATE] = defenderWinRate;
+			}
 
-			source.push(data);
+			var defenderWinRate = parseFloat(data.defenderScore / (data.playerScore + data.defenderScore));
+
+			if (!defenderWinRate) {
+
+				defenderWinRate = 0;
+
+			}
+
+			var record = {};
+
+			record[this.sort.PLAYER_SCORES] = data.playerScore;
+
+			record[this.sort.DEFENDER_SCORES] = data.defenderScore;
+
+			record[this.sort.PLAYER_WIN_RATE] = playerWinRate;
+
+			record[this.sort.DEFENDER_WIN_RATE] = defenderWinRate;
+
+			source.push(record);
 
 			this.storage.setItem(this.store, JSON.stringify(source));
 
@@ -239,7 +314,7 @@
 
 		Records.prototype.sortBy = function(key) {
 				
-			var source = JSON.parse(this.storage.getItem(this.store));
+			var source = this.all();
 
 			switch (key) {
 
@@ -357,50 +432,89 @@
 
 		var records = new Records;
 
-		// Handle counter ui 
-		var incrementPlayerScore = function () {
+		// -- subcomponent 
+		// ---- completion form
+		var completionFormData = {
 
-			$('.player .flip--top').addClass('animated-front');
+			battleName : "",
 
-			$('.player .flip--back').addClass('animated-back');
+			status : ""
 
-			setTimeout(function () {
+		};
 
-				$('.player .flip--top').removeClass('animated-front');
+		Vue.component('completion-form', {
 
-				$('.player .flip--back').removeClass('animated-back');
+			template : "#completion-form-template",
 
-			},1000);
+			data : function () {
 
-			$(".player .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
-			    
-			    app.playerScore ++;
+				return completionFormData;
 
-			});
+			},
 
-		}
+			methods: {
 
-		var incrementDefenderScore = function () {
+				cancel: function () {
 
-			$('.defender .flip--top').addClass('animated-front');
+					alert(":( We are so sad!")
 
-			$('.defender .flip--back').addClass('animated-back');
+					// reset counter
+					resetCounter();
 
-			setTimeout(function () {
+				},
 
-				$('.defender .flip--top').removeClass('animated-front');
+				submit: function () {
 
-				$('.defender .flip--back').removeClass('animated-back');
+					// push to record data base
+					records.push({
 
-			},1000);
+						battleName : this.battleName,
 
-			$(".defender .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
-			    
-			    app.defenderScore ++;
+						playerScore : app.playerScore,
 
-			});
+						defenderScore : app.defenderScore
 
-		}
+					});
+
+					alert("Thanks for the input! You can compare your score with others later!");
+
+					// reset counter
+					resetCounter();
+				}
+
+			}
+
+		});	
+
+		// ---- records table
+		var recordsTableData = {
+
+			recordList: records.all()
+
+		};
+
+		Vue.component('records-table', {
+
+			template : '#records-table-template',
+
+			data : function () {
+
+				return recordsTableData;
+
+			},
+
+			methods : {
+
+				toPercentage: function (value) {
+
+					return String(value * 100) + "%";
+
+				}
+
+			}
+
+		});
+
 
 		// Init vue for handling view data
 		var app = new Vue({
@@ -413,7 +527,7 @@
 
 				defenderScore : 0,
 
-				started : false,
+				started : true,
 
 				finished : false
 
@@ -449,58 +563,54 @@
 
 		}
 
-		// -- subcomponent for managing post-finish form
-		var completionFormData = {
+		// Handle counter ui 
+		var incrementPlayerScore = function () {
 
-			battleName : "",
+			$('.player .flip--top').addClass('animated-front');
 
-			status : ""
+			$('.player .flip--back').addClass('animated-back');
 
-		};
+			setTimeout(function () {
 
-		Vue.component('completion-form', {
+				$('.player .flip--top').removeClass('animated-front');
 
-			template : "competion-form-template",
+				$('.player .flip--back').removeClass('animated-back');
 
-			data : function () {
+			},1000);
 
-				return completionFormData;
+			$(".player .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
 
-			},
+			$(".player .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
+			    
+			    app.playerScore ++;
 
-			methods: {
+			});
 
-				cancel: function () {
+		}
 
-					alert(":< We are so sad!")
+		var incrementDefenderScore = function () {
 
-					// reset counter
-					resetCounter();
+			$('.defender .flip--top').addClass('animated-front');
 
-				},
+			$('.defender .flip--back').addClass('animated-back');
 
-				submit: function () {
+			setTimeout(function () {
 
-					// push to record data base
-					records.push({
+				$('.defender .flip--top').removeClass('animated-front');
 
-						battleName : this.battleName,
+				$('.defender .flip--back').removeClass('animated-back');
 
-						playerScore : app.playerScore,
+			},1000);
+				
+			$(".defender .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
 
-						defenderScore : app.defenderScore
+			$(".defender .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function(e) {
 
-					});
+			    app.defenderScore ++;
 
-					alert("Thanks for the input! You can compare your score with others later!");
+			});
 
-					// reset counter
-					resetCounter();
-				}
-
-			}
-
-		});		
+		}	
 
 		// Init socket io for receiving data
 		var ADDR_SERVER = 'http://127.0.0.1:8000';
@@ -523,6 +633,8 @@
 
 		// listening for events
 		socket.on('started', function (data) {
+
+			console.log("Started");
 
 			data = JSON.parse(data);
 
@@ -563,6 +675,8 @@
 		});
 
 		socket.on('score_increment', function (data) {
+
+			console.log("Incrementing data available" + data);
 
 			data = JSON.parse(data);
 

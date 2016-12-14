@@ -973,7 +973,7 @@ class Commander {
                     // move defender one to the right
                     defender.erase();
 
-                    if (defender.get_x() > 28) {
+                    if (defender.get_x() >= 28) {
 
                         defender.set_x(28);
 
@@ -1007,7 +1007,7 @@ class Commander {
 
         void start_multi_game() {
 
-            Serial.write("s 1\n");
+            Serial.write("s 1");
 
         }
 
@@ -1015,13 +1015,13 @@ class Commander {
 
             if (p == "player") {
 
-                Serial.write("p p1\n");
+                Serial.write("p p1");
 
             }
 
             if (p == "defender") {
 
-                Serial.write("p p2\n");
+                Serial.write("p p2");
 
             }
 
@@ -1029,7 +1029,7 @@ class Commander {
 
         void finish_multi_game() {
 
-            Serial.write("f 1\n");
+            Serial.write("f 1");
 
         }
 
@@ -1544,8 +1544,6 @@ class MultiGame {
 
         MultiGame() {
 
-            time = millis();
-
         }
 
         void setup() {
@@ -1565,21 +1563,6 @@ class MultiGame {
 
         void loop(int potentiometer_value, bool player_button_pressed, bool finish_pressed) {
 
-            // enable game finish
-            if (finish_pressed) {
-
-                // print scores
-                matrix.fillScreen(BLACK.to_333());
-
-                print.scores(player_score, defender_score);
-
-                // send finish info over the wires
-                cmd.finish_multi_game();
-
-                return;
-
-            }
-
             // check if server is ready
             /*
             if (!server_ready()) {
@@ -1593,11 +1576,47 @@ class MultiGame {
 
             // when server is ready ...
             int current_time = millis();
+                
+            // enable game finish
+            if (finish_pressed) {
+              
+                // finish the game
+                finished = true;
+
+            }
+
+            if (finished) {
+
+                // print final score
+                if (last_score_time == 0) {
+
+                    print.scores(player_score, defender_score);
+                  
+                }
+                
+                if (current_time - last_score_time > 1500) {
+
+                    // print scores
+                    matrix.fillScreen(BLACK.to_333());
+
+                    print.scores(player_score, defender_score);
+
+                    last_score_time = current_time;
+                }
+                
+                // send finish info over the wires
+                cmd.finish_multi_game();
+
+                return;
+              
+            }
             
             // enable player control (on board)
             if (abs(potentiometer_value - prev_potentiometer_value) > 30) {
 
                 draw_player(potentiometer_value / 32);
+
+                prev_potentiometer_value = potentiometer_value;
 
             }
 
@@ -1606,7 +1625,13 @@ class MultiGame {
 
                 player.shoot(soccer);
 
-            }
+                soccer.set_initial_action_time(current_time);
+
+                last_soccer_time = current_time;
+
+             }
+              
+            
 
             // enable defender control (remote)
             cmd.interact_with(defender, cannon);
@@ -1691,6 +1716,8 @@ class MultiGame {
         Commander cmd;
         Printer print;
         bool selected = false;
+        bool finished = false;
+        
         // game objects
         CannonBall cannon;
         SoccerBall soccer;
@@ -1703,15 +1730,16 @@ class MultiGame {
         int player_score = 0;
 
         // timers / pace trackers
-    int time = 0;
-        int button_press_interval = 0;
+        int last_score_time = 0;
+        int last_soccer_time = 0;
+        int last_button_pressed = 0;
         int prev_potentiometer_value = 512; // middle of screen
 
         // initialization functions
         void initialize_time_counter() {
 
             int time = millis();
-
+          
             player.set_initial_action_time(time);
 
             soccer.set_initial_action_time(time);
@@ -1727,14 +1755,14 @@ class MultiGame {
             player.allow_unlimited_shots(true);
             
             // config cannon
-            cannon.set_speed(4);
+            cannon.set_speed(6);
 
             // config soccer
-            soccer.set_speed(4);
+            soccer.set_speed(6);
 
             // config net
             net.set_can_move(true);
-            net.set_speed(2);
+            net.set_speed(4);
             net.allow_net_to_expand(true);
 
             // config defender
@@ -1764,6 +1792,9 @@ class MultiGame {
         void draw_player(int x = 16) {
 
             player.erase();
+            if (x >= 29) {
+              x = 29;
+            }
             player.set_x(x);
             player.draw();
 
@@ -1825,11 +1856,13 @@ class ModeSelector {
 
         void show_options() {
 
-            matrix.fillScreen(BLACK.to_333());
+            if (millis() - last_refreshed_option > 1000 ) {
 
-            if (last_refreshed - millis() > 1000 ) {
-
+                matrix.fillScreen(BLACK.to_333());
+                
                 print.mode_options();
+
+                last_refreshed_option = millis();
               
             }
             
@@ -1842,9 +1875,14 @@ class ModeSelector {
             // detect potentiometer value change
             int option = potentiometer_value / 512 + 1;
 
-            print.deselected();
+            if (current_time - last_refreshed_selection > 500 ) {
 
-            print.selected(option);
+                print.deselected();
+
+                print.selected(option);   
+
+                last_refreshed_selection = millis();
+            }
 
             // detected button pressed action
             if ((current_time - time > 500) && button_pressed) {
@@ -1870,8 +1908,9 @@ class ModeSelector {
         Printer print;
 
         // timer
-        int time = millis();
-        int last_refreshed = millis();
+        int time = 0;
+        int last_refreshed_option = 0;
+        int last_refreshed_selection = 0;
         // selected mode
         int mode = 0;
 
@@ -1913,7 +1952,7 @@ void loop() {
         option = select.choose(potentiometer_value, button_pressed);
 
     }
-
+    
     switch (option) {
 
         // single mode selected
@@ -1922,6 +1961,7 @@ void loop() {
               matrix.fillScreen(BLACK.to_333());
               single_game.select();
               single_game.setup();
+              button_pressed = false;
             }
             single_game.loop(potentiometer_value, button_pressed);
         break;
@@ -1932,6 +1972,7 @@ void loop() {
               matrix.fillScreen(BLACK.to_333());
               multi_game.select();
               multi_game.setup();
+              button_pressed = false;
             }
             multi_game.loop(potentiometer_value, button_pressed, finish_pressed);
         break;
