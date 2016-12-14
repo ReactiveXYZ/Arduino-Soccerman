@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+	<title>Score</title>
+
+	<style type="text/css">
+			
+		* { box-sizing: border-box; }
+
+		body {
+			width: 100%;
+			height: 100%;
+			text-align:center;
+			font-family: 'Helvetica Neue', sans-serif;
+		}
+
+		.title h1{
+			color : #bbb ;
+		}
+
+		#app {
+			height: 20%;
+			width: 30%;
+			margin:auto;
+		}
+
+		.player {
+			margin-top: 200px;
+			margin-right: 100px;
+
+		}
+
+		.defender {
+			margin-top: 200px;
+			margin-left: 100px;
+
+		}
+
+		.seg {
+		  display: inline-block;
+		}
+
+		.flip-wrapper {
+		  position: relative;
+		  height: 120px;
+		}
+
+		.flip {
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  border: 1px solid black;
+		  height: 100%;
+		  padding: 0 8px;
+		  color: #FAFAFA;
+		  border-radius: 6px;
+		  background: #444444;
+		  font-weight: normal;
+		  font-size: 100px;
+		  text-shadow: 0 -1px  black;
+		  box-shadow: 0 1px 2px rgba(0,0,0,.3),
+		              0 1px 0 rgba(255,255,255,.3) inset, /* top */
+		              0 0 1px rgba(255,255,255,.3) inset;
+		}
+
+		.flip--top, .flip--bottom { overflow: hidden; }
+
+		.animated-front {
+
+			animation: flip 1000ms ease-in-out infinite;
+
+		}
+
+		.flip--top {
+		  transform-origin: bottom;
+		  height: 50%;
+		  border-radius: 6px 6px 0 0;
+		  z-index: 2;
+		  backface-visibility: hidden;
+		}
+
+		.animated-back {
+			animation: flip-back 1000ms ease-in-out infinite;
+		}
+
+		.flip--back {
+		  line-height: 0;
+		  transform-origin: top;
+		  transform: rotateX(180deg);
+		  margin-top: 60px;
+		  border-radius: 0 0 6px 6px;
+		}
+
+		.flip--bottom {
+		  height: 50%;
+		  margin-top: 60px;
+		  border-radius: 0 0 6px 6px;
+		  border-top: none;
+		  line-height: 0;
+		  z-index: 1
+		}
+
+		h3 {
+		  margin: 5px 0 0 0;
+		  font-size: 11px;
+		  font-weight: normal;
+		  color: #bbb;
+		  text-shadow: 0 1px 0 #fff;
+		}
+
+
+		@-webkit-keyframes flip {
+		  to {
+		    transform: rotateX(180deg); 
+		  }
+		}
+
+		@-webkit-keyframes flip-back {
+		  to {
+		    transform: rotateX(0deg); 
+		  }
+		}
+
+	</style>
+
+</head>
+
+<body>
+	
+	<div id="app">
+		<div class="title" v-if="started">
+			<h1>The battle is on!</h1>
+		</div>
+		<div class="title" v-if="!started">
+			<h1>Waiting for the next battle...</h1>
+		</div>
+		
+		<div class="seg player" v-if="started">
+		  	<div class="flip-wrapper">
+			    <div class="flip flip--next">{{ playerScore + 1 }}</div>
+			    <div class="flip flip--top"> {{ playerScore }}</div>
+			    <div class="flip flip--top flip--back">{{ playerScore + 1 }}</div>
+			    <div class="flip flip--bottom"> {{ playerScore }} </div>
+		  	</div>
+		  	<h3>Player Victories</h3>
+		</div>
+
+		<div class="seg defender" v-if="started">
+		  	<div class="flip-wrapper">
+			    <div class="flip flip--next">{{ defenderScore + 1}}</div>
+			    <div class="flip flip--top"> {{ defenderScore }}</div>
+			    <div class="flip flip--top flip--back">{{ defenderScore + 1 }}</div>
+			    <div class="flip flip--bottom"> {{ defenderScore }} </div>
+		  	</div>
+		  	<h3>defender Victories</h3>
+		</div>
+
+	</div>
+
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/vue/2.1.5/vue.min.js"></script>
+
+	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+
+	<script type="text/x-template" id = "competion-form-template">
+		
+		<div id="competion-form">
+			<form>
+				<label for="battle-name">
+					Name of this epic battle!
+				</label>
+				<input type="text" name="battle-name" id="battle-name" v-model="battleName">
+				<button v-on:click = "cancel">Yes! Submit</button>
+				<button v-on:click = "submit">No! Boring game!</button>
+			</form>
+		</div>
+
+	</script>
+
+	<script type="text/javascript">
+
+		// Handle record's local storage
+		var Records = function (){
+
+			// storage related
+			this.store = "records";
+
+			this.storage = localStorage;
+
+			// sorting keys
+			this.sort = {
+
+				PLAYER_SCORES : 'player_scores',
+
+				DEFENDER_SCORES : 'defender_scores',
+
+				PLAYER_WIN_RATE : 'player_win_rate',
+
+				DEFENDER_WIN_RATE : 'defender_win_rate'
+
+			}
+		}
+
+		// data in form of
+		// {
+		//    battleName,
+		//    playerScore,
+		// 	  defenderScore
+		// }
+		Records.prototype.push = function(data) {
+			
+			var source = this.storage.getItem(this.store);
+
+			if (source == "") {
+
+				source = [];
+
+			} else {
+
+				source = JSON.parse(this.storage.getItem(this.store));
+			}
+
+			var playerWinRate = parseFloat(data.playerScore / (data.playerScore + data.defenderScore));
+
+			var defenderWinRate = parseFloat(1.0 - playerWinRate);
+
+			data[this.sort.PLAYER_WIN_RATE] = playerWinRate;
+
+			data[this.sort.DEFENDER_WIN_RATE] = defenderWinRate;
+
+			source.push(data);
+
+			this.storage.setItem(this.store, JSON.stringify(source));
+
+		}
+
+		Records.prototype.sortBy = function(key) {
+				
+			var source = JSON.parse(this.storage.getItem(this.store));
+
+			switch (key) {
+
+				case this.sort.PLAYER_SCORES:{
+
+					source.sort(function (a, b) {
+
+						if (a[this.sort.PLAYER_SCORES] > b[this.sort.PLAYER_SCORES]){
+
+							return 1;
+
+						}
+
+						if (a[this.sort.PLAYER_SCORES] < b[this.sort.PLAYER_SCORES]){
+
+							return -1;
+
+						}
+
+						return 0;
+
+					}.bind(this));
+
+					return source;
+
+				}
+
+				break;
+
+				case this.sort.DEFENDER_SCORES: {
+
+					source.sort(function (a, b) {
+
+						if (a[this.sort.DEFENDER_SCORES] > b[this.sort.DEFENDER_SCORES]){
+
+							return 1;
+
+						}
+
+						if (a[this.sort.DEFENDER_SCORES] < b[this.sort.DEFENDER_SCORES]){
+
+							return -1;
+
+						}
+
+						return 0;
+
+					}.bind(this));
+
+					return source;
+
+				}
+
+				break;
+
+				case this.sort.PLAYER_WIN_RATE: {
+
+					source.sort(function (a, b) {
+
+						if (a[this.sort.PLAYER_WIN_RATE] > b[this.sort.PLAYER_WIN_RATE]){
+
+							return 1;
+
+						}
+
+						if (a[this.sort.PLAYER_WIN_RATE] < b[this.sort.PLAYER_WIN_RATE]){
+
+							return -1;
+
+						}
+
+						return 0;
+
+					}.bind(this));
+
+					return source;
+
+				}
+
+				break;
+
+				case this.sort.DEFENDER_WIN_RATE: {
+
+					source.sort(function (a, b) {
+
+						if (a[this.sort.DEFENDER_WIN_RATE] > b[this.sort.DEFENDER_WIN_RATE]){
+
+							return 1;
+
+						}
+
+						if (a[this.sort.DEFENDER_WIN_RATE] < b[this.sort.DEFENDER_WIN_RATE]){
+
+							return -1;
+
+						}
+
+						return 0;
+
+					}.bind(this));
+
+					return source;
+
+				}
+
+				break;
+
+				default:
+				break;
+			}
+
+			return source;
+
+		}
+
+		var records = new Records;
+
+		// Handle counter ui 
+		var incrementPlayerScore = function () {
+
+			$('.player .flip--top').addClass('animated-front');
+
+			$('.player .flip--back').addClass('animated-back');
+
+			setTimeout(function () {
+
+				$('.player .flip--top').removeClass('animated-front');
+
+				$('.player .flip--back').removeClass('animated-back');
+
+			},1000);
+
+			$(".player .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
+			    
+			    app.playerScore ++;
+
+			});
+
+		}
+
+		var incrementDefenderScore = function () {
+
+			$('.defender .flip--top').addClass('animated-front');
+
+			$('.defender .flip--back').addClass('animated-back');
+
+			setTimeout(function () {
+
+				$('.defender .flip--top').removeClass('animated-front');
+
+				$('.defender .flip--back').removeClass('animated-back');
+
+			},1000);
+
+			$(".defender .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
+			    
+			    app.defenderScore ++;
+
+			});
+
+		}
+
+		// Init vue for handling view data
+		var app = new Vue({
+
+			el : "#app",
+
+			data : {
+
+				playerScore : 0,
+
+				defenderScore : 0,
+
+				started : false,
+
+				finished : false
+
+			},
+
+			filters : {
+
+				normalize : function (value) {
+
+					if (value < 0 ){
+
+						return 0;
+
+					}
+
+					return value;
+
+				}
+
+			}
+
+		})
+
+		var resetCounter = function (){
+
+			app.playerScore = 0;
+
+			app.defenderScore = 0;
+
+			app.started = false;
+
+			app.finished = false;
+
+		}
+
+		// -- subcomponent for managing post-finish form
+		var completionFormData = {
+
+			battleName : "",
+
+			status : ""
+
+		};
+
+		Vue.component('completion-form', {
+
+			template : "competion-form-template",
+
+			data : function () {
+
+				return completionFormData;
+
+			},
+
+			methods: {
+
+				cancel: function () {
+
+					alert(":< We are so sad!")
+
+					// reset counter
+					resetCounter();
+
+				},
+
+				submit: function () {
+
+					// push to record data base
+					records.push({
+
+						battleName : this.battleName,
+
+						playerScore : app.playerScore,
+
+						defenderScore : app.defenderScore
+
+					});
+
+					alert("Thanks for the input! You can compare your score with others later!");
+
+					// reset counter
+					resetCounter();
+				}
+
+			}
+
+		});		
+
+		// Init socket io for receiving data
+		var ADDR_SERVER = 'http://127.0.0.1:8000';
+
+		var socket = io(ADDR_SERVER);
+
+		socket.on('connect', function (){
+
+			console.log("Socket connected");
+
+		});
+
+		socket.on('disconnect', function (){
+
+			console.log("Socket disconnected");
+
+			resetCounter();
+
+		});
+
+		// listening for events
+		socket.on('started', function (data) {
+
+			data = JSON.parse(data);
+
+			if (data['value'] != "0") {
+
+				resetCounter();
+
+				app.started = true;
+
+			} else {
+
+				resetCounter();
+
+			}
+
+		});
+
+		socket.on('finished', function (data) {
+
+			data = JSON.parse(data);
+
+			if (data['value'] != "0") {
+
+				resetCounter();
+
+				app.finished = true;
+
+			}
+
+
+		});
+
+
+		socket.on('score_reset', function () {
+
+			resetCounter();
+
+		});
+
+		socket.on('score_increment', function (data) {
+
+			data = JSON.parse(data);
+
+			if (data['player'] == 'p1') {
+
+				incrementPlayerScore();
+
+			}
+
+			if (data['player'] == 'p2') {
+
+				incrementDefenderScore();
+
+			}
+
+		});
+
+	</script>
+</body>
+</html>
