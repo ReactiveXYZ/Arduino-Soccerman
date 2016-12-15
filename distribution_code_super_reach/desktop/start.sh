@@ -5,5 +5,6 @@ select yn in "Yes" "No"; do
         No ) break;;
     esac
 done
+redis-server &
 gunicorn -k eventlet -w 1 server:app &
-python server.py
+python server_new.py

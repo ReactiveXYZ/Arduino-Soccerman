@@ -18,6 +18,8 @@ KEY_LEFT = 'a'
 KEY_RIGHT = 'd'
 KEY_QUIT = 'q'
 KEY_ATTACK = 'j'
+KEY_FINISH = 'f'
+KEY_RESTART = 'r'
 
 # server init
 mgr = socketio.KombuManager('redis://127.0.0.1:6379')
@@ -55,6 +57,12 @@ class Client(object):
 
 		self.ser.write(message)
 
+
+def isData():
+    return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
+
+old_settings = termios.tcgetattr(sys.stdin)
+
 class Server(object):
 
 	def __init__(self):
@@ -74,7 +82,7 @@ class Server(object):
 		return ch
 
 	def parse_message(self, message):
-
+		print message
 		comps = message.split(' ')
 
 		if len(comps) == 2:
@@ -85,8 +93,6 @@ class Server(object):
 	def init(self):
 
 		self.client.write("READY\n")
-
-		sio.emit("started", data = json.dumps({ 'value' : '1' }))
 
 
 	def receive_score_updates(self):
@@ -110,10 +116,9 @@ class Server(object):
 					# player has scored
 					sio.emit("score_increment", data = json.dumps({ 'player' : msg_value }))
 
-	def detect_key_presses(self):
+	def detect_key_presses(self, ch):
 			
 			# detect key presses
-			ch = self.get_ch()
 
 			if ch == KEY_LEFT:
 				self.client.write("L")
@@ -121,6 +126,12 @@ class Server(object):
 				self.client.write("R")
 			elif ch == KEY_ATTACK:
 				self.client.write("S")
+			elif ch == KEY_FINISH:
+				self.client.write("F")
+				sio.emit("finished", data = json.dumps({ 'value' : '1' }));
+			elif ch == KEY_RESTART:
+				self.client.write('|')
+				sio.emit("score_reset")
 			elif ch == KEY_QUIT:
 				# terminal game
 				self.client.write("Q")
@@ -129,24 +140,14 @@ class Server(object):
 				os.system("lsof -i tcp:6379 | grep redis-ser | grep -v grep | awk '{print $2}' | xargs kill")
 				# terminate gunicorn server
 				os.system("lsof -i tcp:8000 | grep Python | grep -v grep | awk '{print $2}' | xargs kill");
+				# reset terminal settings
+				termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 				# clear mess
 				print(chr(27) + "[2J")
 				os.system('cls' if os.name == 'nt' else 'clear')
 				# exit the code
 				print "Quiting..."
 				exit()
-
-	def start_communication(self):
-		
-		# detect key presses
-		self.detect_key_presses()
-		# spawn the socket on a separate process
-		# p = Process(target=self.receive_score_updates)
-		# p.start()
-		# detect score changes
-		self.receive_score_updates()
-		
-
 
 		
 server = Server()
@@ -157,5 +158,15 @@ if __name__ == '__main__':
 	server.init()
 
 	# start communicating
-	while True:
-		server.start_communication()
+	try:
+		tty.setcbreak(sys.stdin.fileno())
+
+		while True:
+			
+			server.receive_score_updates()
+
+			if isData():
+				c = sys.stdin.read(1)
+				server.detect_key_presses(c)
+	finally:
+		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)

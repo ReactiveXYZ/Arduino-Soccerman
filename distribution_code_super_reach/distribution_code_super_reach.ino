@@ -289,7 +289,58 @@ class Printer {
     }
 
 
+    void greeting() {
+            matrix.drawCircle(6, 7, 5, WHITE.to_333());
+            matrix.fillCircle(6, 7, 5, WHITE.to_333());
+
+            matrix.drawRect(5, 2, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 2, 1, 1, BLUE.to_333());
+            matrix.drawRect(7, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 3, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 4, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 4, 1, 1, BLUE.to_333());
+   
+            matrix.drawRect(5, 10, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 10, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(7, 11, 1, 1, BLUE.to_333());
+            matrix.drawRect(5, 12, 1, 1, BLUE.to_333());
+            matrix.drawRect(6, 12, 1, 1, BLUE.to_333());
+   
+            matrix.drawRect(2, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(2, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(1, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(2, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(3, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(4, 7, 1, 1, BLUE.to_333());
+
+            matrix.drawRect(9, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 6, 1, 1, BLUE.to_333());
+            matrix.drawRect(9, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 8, 1, 1, BLUE.to_333());
+            matrix.drawRect(8, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(9, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(10, 7, 1, 1, BLUE.to_333());
+            matrix.drawRect(11, 7, 1, 1, BLUE.to_333());
+   
+            matrix.setCursor(14, 4);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('M');
+
+            matrix.setCursor(20, 4);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('A');
       
+            matrix.setCursor(26, 5);
+            matrix.setTextColor(LIME.to_333());
+            matrix.print('N');       
+        }   
       
     
     
@@ -375,13 +426,22 @@ class Drawable {
         this->y = y;
     }
 
+    bool single() {
+        return is_single;
+    }
+    
+    void set_single(bool val){
+        is_single = val;
+    }
+
     virtual void draw() = 0;
     virtual void erase() = 0;
 
     protected:
 
         int x;
-    int y;
+        int y;
+        bool is_single = false;
 
     void draw_with_color(int x, int y, Color color) {
 
@@ -568,6 +628,11 @@ class SoccerBall: public Moveable, public Drawable {
     }
 
     bool has_hit_defender(Drawable & defender) {
+
+        if (defender.single()){
+            return (y == defender.get_y()) && (x >= defender.get_x() && x <= defender.get_x() + 3);
+        }
+        
         if ((y == defender.get_y()) && ((x >= defender.get_x() && x <= defender.get_x() + 3) ||
                 (x >= defender.get_x() + 8 && x <= defender.get_x() + 11) ||
                 (x >= defender.get_x() + 16 && x <= defender.get_x() + 19) ||
@@ -869,6 +934,12 @@ class Defender: public Moveable, public Drawable {
         move_left = false;
     }
 
+    int get_index() {
+
+        return index;
+
+    }
+
     void move() {
         // record timestamp
         Moveable::timestamp();
@@ -928,7 +999,7 @@ class Defender: public Moveable, public Drawable {
     }
 
     private:
-        int index;
+        int index = -1;
         bool move_left = false;
         bool can_shoot_cannon = false;
         int last_shooting_time;
@@ -998,6 +1069,7 @@ class Commander {
 
                     break;
 
+
                 default:
                     break;
 
@@ -1027,10 +1099,16 @@ class Commander {
 
         }
 
-        void finish_multi_game() {
+        bool should_finish_multi_game() {
 
-            Serial.write("f 1");
+            if (this->peek_message() == 'F'){
 
+                char c = this->read_message();
+
+                return true;
+            }
+
+            return false;
         }
 
 
@@ -1048,9 +1126,25 @@ class Commander {
 
             return ch;
 
-        } 
+        }
+
+        char peek_message() {
+
+            char ch = 'x';
+
+            if (Serial.available() > 0) {
+
+                ch = Serial.peek();
+
+            }
+
+            return ch;
+
+        }
 
 };
+
+const int MAX_LEVEL = 6;
 
 // Single Game
 class SingleGame {
@@ -1064,7 +1158,13 @@ class SingleGame {
         }
 
     void setup() {
-        time = millis();
+
+        // print logo
+        matrix.fillScreen(BLACK.to_333());
+        print.greeting();
+        delay(3000);
+
+        // init game
         next_level();
 
         
@@ -1072,157 +1172,147 @@ class SingleGame {
 
     void loop(int potentiometer_value, bool button_pressed) {
 
-        // TODO:
-        // check how many shots player has
-        if (player.get_num_shots() < 1) {
-            if (!net.has_been_goaled() && !ball.has_been_shot()) {
-                game_over();
+            int current_time = millis();
+            // go blue
+            if (level > MAX_LEVEL) {
+
+                if (current_time - last_go_blue_time > 20000 || last_go_blue_time == 0) {
+
+                    matrix.fillScreen(BLACK.to_333());
+                    print.go_blue();
+                    last_go_blue_time = current_time;
+                  
+                }
+
                 return;
-            }
-
-        }
-
-        if (!player.is_alive() && !net.has_been_goaled()) {
-          game_over();
-          return;
-        }
-        
-        // set current time
-        int current_time = millis();
-        // check whether level is cleared
-        if (!level_cleared()) {
-
-            // detect the movement of player
-            // remain stable if player is not moving significantly
-            if (abs(prev_potentiometer_value - potentiometer_value) > 30) {
-              player.reset(parse_potentiometer_value(potentiometer_value));
-              prev_potentiometer_value = potentiometer_value;
+              
             }
             
-            // check if button is pressed
-            if (button_pressed && !ball.has_been_shot()) {
-                // erase the previous ball
-                ball.reset();
-                // shoot the ball after press the button
-                player.shoot(ball);
-                
+            // game over when there is no remaining shots 
+            if (player.get_num_shots() < 1) {
+                if (!net.has_been_goaled() && !ball.has_been_shot()) {
+                    game_over(current_time);
+                    return;
+                }
             }
-            //  move soccer ball
-            if (ball.ready_to_act(current_time)) {
 
-                if (ball.has_been_shot()) {
-                    // set variable speed
-                    ball.set_speed((player.get_y() - ball.get_y()) * 0.5 * ball.get_speed());
-                    // move ball                  
-                    ball.move();
-                    // redraw player
-                    player.draw();
+            // game over when the cannonball from the defenders collids with the player
+            if (!player.is_alive() && !net.has_been_goaled()) {
+                game_over(current_time);
+                return;
+            }
+            
+            // check whether level is cleared
+            if (!level_cleared()) {
+
+                // detect the movement of player
+                // remain stable if player is not moving significantly
+                if (abs(prev_potentiometer_value - potentiometer_value) > 30) {
+                    player.reset(parse_potentiometer_value(potentiometer_value));
+                    prev_potentiometer_value = potentiometer_value;
+                }
+                
+                // check if button is pressed
+                if (button_pressed && !ball.has_been_shot()) {
+                    // erase the previous ball
+                    ball.reset();
+                    ball.set_can_move(true);
+                    // shoot the ball after press the button
+                    player.shoot(ball);
+                    ball.set_initial_action_time(current_time);
+                }
+                //  move soccer ball
+                if (ball.ready_to_act(current_time)) {
+
+                    if (ball.has_been_shot()) {
+                        // set variable speed
+                        ball.set_speed((player.get_y() - ball.get_y()) * 0.5 * ball.get_speed());
+                        // move ball                  
+                        ball.move();
+                        // redraw player to deal with soccer erasing
+                        player.draw();
+                    } 
+                }
+
+                // move defenders
+                for (int i = 0; i < NUM_DEFENDERS; ++i) {
+
+                    if (ball.has_hit_defender(defenders[i])) {
+                        ball.reset_with_color(RED);
+                    }
+                    
+                    if (defenders[i].ready_to_act(current_time)) {
+                        defenders[i].move();
+                    }
+                }
+
+                // move the net
+                if (net.ready_to_act(current_time)) {   
+                    net.move();
+                }
+
+                if (ball.has_hit_net(net)) {
+                    net.goal();
+                    ball.reset();
+                }
+
+                // reset color when the soccer ball hits the bound of the net
+                if ((ball.get_x() == net.get_x() && ball.get_y() == net.get_y()) || 
+                    (ball.get_x() == net.get_x() && ball.get_y() == net.get_y() + 1) ||
+                    (ball.get_x() == net.get_x() + net.get_width() + 1 && ball.get_y() == net.get_y()) ||
+                    (ball.get_x() == net.get_x() + net.get_width() + 1 && ball.get_y() == net.get_y() + 1)) {
+                      
+                    ball.reset_with_color(WHITE);
+                }
+    
+                // enable defender's shooting behavior
+                int num_cannon_to_shoot = 2;
+
+                int attackers[NUM_CANNONS] = {random(0,4), random(0,4)};
+
+                // when two attackers are the same -> enable one
+                if (attackers[0] == attackers[1]) {
+                    num_cannon_to_shoot = 1;
+                }
+
+                for (int i = 0; i < NUM_CANNONS; i++) {
+                    // see if which cannon can be shot
+                    if (!cannons[i].has_been_shot() && 
+                        defenders[attackers[i]].ready_to_shoot(current_time) &&
+                        defenders[attackers[i]].able_to_shoot() && num_cannon_to_shoot > 0) {
+                        
+                        defenders[attackers[i]].shoot(cannons[i]);
+                        num_cannon_to_shoot--;
+                    }
+
+                    // when ball is fired
+                    if (cannons[i].has_been_shot()) {
+
+                        // move the ball when necessary
+                        if (cannons[i].ready_to_act(current_time)) {
+                            cannons[i].move();
+                        }
+
+                        // detected collisions
+                        if (cannons[i].has_hit_player(player)) {
+                            player.die();
+                        }
+
+                        if (cannons[i].has_hit_soccer(ball)) {
+                            cannons[i].reset();                        
+                            ball.reset();
+                        }
+
+                    }
+                }
+
+
 
                 } 
+            else {
+                next_level();
             }
-
-            // move defenders
-
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
-
-                if (ball.has_hit_defender(defenders[i])) {
-                    ball.reset_with_color(RED);
-                }
-                
-                if (defenders[i].ready_to_act(current_time)) {
-
-                    defenders[i].move();
-
-                }
-
-            }
-
-            // move the net
-            if (net.ready_to_act(current_time)) {
-               
-                net.move();
-
-            }
-
-            if (ball.has_hit_net(net)) {
-
-                net.goal();
-
-                ball.reset();
-
-            }
-
-            // reset color when the soccer ball hits the bound of the net
-            if ((ball.get_x() == net.get_x() && ball.get_y() == net.get_y())|| 
-                (ball.get_x() == net.get_x() && ball.get_y() == net.get_y() + 1) ||
-                (ball.get_x() == net.get_x() + net.get_width() + 1 && ball.get_y() == net.get_y()) ||
-                (ball.get_x() == net.get_x() + net.get_width() + 1 && ball.get_y() == net.get_y() + 1) ){
-                  ball.reset_with_color(WHITE);
-                }
-
-            // enable defender's shooting behavior
-            int num_cannon_to_shoot = 2;
-
-            int attackers[NUM_CANNONS] = {random(0,4), random(0,4)};
-
-            // when two attackers are the same -> enable one
-            if (attackers[0] == attackers[1]) {
-
-                num_cannon_to_shoot = 1;
-
-            }
-
-            for (int i = 0; i < NUM_CANNONS; i ++) {
-
-                // see if which cannon can be shot
-                if (!cannons[i].has_been_shot() && defenders[attackers[i]].ready_to_shoot(current_time) 
-                     && defenders[attackers[i]].able_to_shoot() && num_cannon_to_shoot > 0) {
-                    
-                    defenders[attackers[i]].shoot(cannons[i]);
-                    num_cannon_to_shoot --;
-
-                }
-
-                // when ball is fired
-                if (cannons[i].has_been_shot()) {
-
-                    // move the ball when necessary
-                    if (cannons[i].ready_to_act(current_time)) {
-  
-                        cannons[i].move();
-
-                    }
-
-                    // detected collisions
-                    if (cannons[i].has_hit_player(player)) {
-
-                        player.die();
-
-                    }
-
-                    if (cannons[i].has_hit_soccer(ball)) {
-
-                        cannons[i].reset();
-                        
-                        ball.reset();
-
-                    }
-
-                }
-
-                
-
-            }
-
-
-
-        } else {
-
-            next_level();
-
         }
-
-    }
 
     bool has_been_selected () const {
         return selected;
@@ -1232,6 +1322,16 @@ class SingleGame {
 
         selected = true;
       
+    }
+
+    void deselect() {
+
+        selected = false;
+
+        level = 0;
+
+        time = 0;
+          
     }
     
     private:
@@ -1246,6 +1346,8 @@ class SingleGame {
     CannonBall cannons[NUM_CANNONS];
     int time;
     int prev_potentiometer_value = 512;
+    int last_go_blue_time = 0;
+    int last_game_over_time = 0;
     bool selected = false;
     
     void initialize_time_counter() {
@@ -1254,7 +1356,8 @@ class SingleGame {
         player.set_initial_action_time(time);
         // for soccer ball
         ball.set_initial_action_time(time);
-        
+        // for net
+        net.set_initial_action_time(time);
         // for all defenders
         for (int i = 0; i < NUM_DEFENDERS; i++) {
 
@@ -1271,19 +1374,14 @@ class SingleGame {
     }
 
     void initialize_move_status() {
+            // set different rules for different levels
+            switch (level) {
+                case 1:
 
-        // TODO:
-        // change move status and speed
-        // of objects based on level
-        switch (level) {
-        case 1:
-
-            
-
-                    
                     player.allow_unlimited_shots(true);
-                    player.set_num_shots(5);
-                    ball.set_can_move(true);
+
+                    ball.reset();
+                    ball.set_can_move(false);
                     ball.set_speed(6);
 
                     net.set_can_move(false);
@@ -1296,138 +1394,123 @@ class SingleGame {
                     }
                     break;
 
-        case 2:
+                case 2:
 
-            player.allow_unlimited_shots(false);
-            player.set_num_shots(5);
-            // set the speed of soccer
-            ball.set_speed(6);
-            // move soccer
-            ball.set_can_move(true);
-            net.set_can_move(true);
-            // allow net to expand
-            net.allow_net_to_expand(true);
-            net.set_speed(3);
-            
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                    player.allow_unlimited_shots(false);
+                    player.set_num_shots(5);
 
-                defenders[i].set_can_move(true);
-                // set speed for defenders
-                defenders[i].set_speed(1);
-                defenders[i].allow_shooting(false);
+                    ball.set_can_move(true);
+                    ball.set_speed(6);
 
+                    net.set_can_move(true);
+                    net.set_speed(3);
+                    net.allow_net_to_expand(false);
+                    
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].set_can_move(true);
+                        defenders[i].set_speed(2);
+                        defenders[i].allow_shooting(false);
+                    }
+                    break;
+
+                case 3:
+
+                    player.allow_unlimited_shots(false);
+                    player.set_num_shots(5);
+
+                    ball.set_can_move(true);
+                    ball.set_speed(6);
+
+                    net.set_can_move(true);
+                    net.set_speed(3);
+                    net.allow_net_to_expand(true);
+                    
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].set_can_move(true);
+                        defenders[i].set_speed(3);
+                        defenders[i].allow_shooting(false);
+                    }
+                    break;
+
+                case 4:
+
+                    player.allow_unlimited_shots(false);
+                    player.set_num_shots(5);
+
+                    ball.set_can_move(true);
+                    ball.set_speed(6);
+
+                    net.set_can_move(true);
+                    net.set_speed(3);
+                    net.allow_net_to_expand(true);
+                    
+                    for (int i = 0; i < NUM_CANNONS; ++i) {
+                        cannons[i].set_speed(1);                     
+                    }
+
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].set_can_move(true);
+                        defenders[i].set_speed(1);
+                        defenders[i].allow_shooting(true);
+                    }
+
+                    Defender::set_shooting_frequency(0.1);
+                    break;
+
+                case 5:
+
+                    player.allow_unlimited_shots(false);
+                    player.set_num_shots(5);
+                    
+                    ball.set_can_move(true);
+                    ball.set_speed(6);
+
+                    net.set_can_move(true);
+                    net.set_speed(3);
+                    net.allow_net_to_expand(true);
+                    
+                    for (int i = 0; i < NUM_CANNONS; ++i) {
+                        cannons[i].set_speed(2);                     
+                    }
+
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].set_can_move(true);
+                        defenders[i].set_speed(2);
+                        defenders[i].allow_shooting(true);
+                    }
+
+                    Defender::set_shooting_frequency(1);
+                    break;
+
+                case 6:
+                    player.allow_unlimited_shots(false);
+                    player.set_num_shots(3);
+                    
+                    ball.set_can_move(true);
+                    ball.set_speed(6);
+
+                    net.set_can_move(true);
+                    net.set_speed(4);
+                    net.allow_net_to_expand(true);
+                    
+                    for (int i = 0; i < NUM_CANNONS; ++i) {
+                        cannons[i].set_speed(3);                     
+                    }
+
+                    for (int i = 0; i < NUM_DEFENDERS; ++i) {
+                        defenders[i].set_can_move(true);
+                        defenders[i].set_speed(3);
+                        defenders[i].allow_shooting(true);
+                    }
+
+                    Defender::set_shooting_frequency(0.1);
+                    break;
+
+                default:
+                    
+                break;
             }
-            for (int i = 0; i < NUM_CANNONS; ++i ){
-              // set cannon speed
-              cannons[i].set_speed(1);
-            }
-            break;
-
-        case 3:
-
-            player.allow_unlimited_shots(false);
-            player.set_num_shots(5);
-            // set the speed of soccer
-            ball.set_speed(6);
-            // move soccer
-            ball.set_can_move(true);
-            // set the speed of the net
-            net.set_speed(2);
-            // move the net
-            net.set_can_move(true);
-            // allow net to expand
-            net.allow_net_to_expand(true);
-            
-
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
-
-                defenders[i].set_can_move(true);
-                // set speed for defenders
-                defenders[i].set_speed(1);
-
-            }
-            break;
-
-        case 4:
-
-            player.allow_unlimited_shots(false);
-            player.set_num_shots(5);
-            // set the speed of soccer
-            ball.set_speed(6);
-            // move soccer
-            ball.set_can_move(true);
-            // set the speed of the net
-            net.set_speed(4);
-            // move the net
-            net.set_can_move(true);
-            // allow net to expand
-            net.allow_net_to_expand(true);
-            
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
-
-                defenders[i].set_can_move(true);
-                // set speed for defenders
-                defenders[i].set_speed(1);
-
-            }
-            break;
-
-        case 5:
-
-            player.allow_unlimited_shots(false);
-            player.set_num_shots(5);
-            // set the speed of soccer
-            ball.set_speed(6);
-            // move soccer
-            ball.set_can_move(true);
-            // set the speed of the net
-            net.set_speed(4);
-            // move the net
-            net.set_can_move(true);
-            // allow net to expand
-            net.allow_net_to_expand(true);
-            
-
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
-
-                defenders[i].set_can_move(true);
-                // set speed for defenders
-                defenders[i].set_speed(2);
-
-            }
-            break;
-
-        case 6:
-
-            player.allow_unlimited_shots(true);
-            player.set_num_shots(3);
-            // set the speed of soccer
-            ball.set_speed(16);
-            // move soccer
-            ball.set_can_move(true);
-            // set the speed of the net
-            net.set_speed(4);
-            // move the net
-            net.set_can_move(true);
-            // allow net to expand
-            net.allow_net_to_expand(true);
-           
-
-            for (int i = 0; i < NUM_DEFENDERS; ++i) {
-
-                defenders[i].set_can_move(true);
-                // set speed for defenders
-                defenders[i].set_speed(2);
-
-            }
-            break;
-
-        default:
-            matrix.fillScreen(BLACK.to_333());
-            print.go_blue();
-            delay(30000);
         }
-    }
 
     int parse_potentiometer_value(int value) {
 
@@ -1444,14 +1527,12 @@ class SingleGame {
 
     void draw_net() {
 
-        // TODO:
         net.draw();
 
     }
 
     void draw_defenders() {
 
-        // TODO:
         // for all levels, defenders act similarly
 
         for (int i = 0; i < NUM_DEFENDERS; ++i) {
@@ -1483,40 +1564,37 @@ class SingleGame {
     }
 
     void reset_level() {
+            if (level > MAX_LEVEL) {
+              return;
+            }
+            // clear the board
+            matrix.fillScreen(BLACK.to_333());
+            initialize_time_counter();
+            initialize_move_status();
 
-        // TODO:
-        // assume there is getter in player class
-        initialize_time_counter();
-        initialize_move_status();
+            for (int i = 0; i < NUM_CANNONS; ++i) {
+              cannons[i].reset();
+            }
+    
+            // clear board
+            matrix.fillScreen(BLACK.to_333());
+            // print level message
+            print.level(level);
+            delay(1500);
 
-        if (level > 6) {
-          return;
-        }
-        
-        // clear board
-        matrix.fillScreen(BLACK.to_333());
-        // print messages
-        print.level(level);
-        delay(1500);
+            // fill the screen with black
+            matrix.fillScreen(BLACK.to_333());
 
-        // fill the screen with black
-        matrix.fillScreen(BLACK.to_333());
-
-        // draw player
-        draw_player();
-        // draw defenders
-        draw_defenders();
-        draw_net();
-        net.reset();
+            draw_player();
+            draw_defenders();
+            draw_net();
+            net.reset();
     }
 
     void next_level() {
 
-        // TODO:
         // increment level
         level++;
-        // clear the board
-        matrix.fillScreen(BLACK.to_333());
         // reset level to the next level
         reset_level();
 
@@ -1524,14 +1602,18 @@ class SingleGame {
 
     
 
-    void game_over() {
+    void game_over(int current_time) {
 
-        // TODO:
-        // clear the board
-        matrix.fillScreen(BLACK.to_333());
-        // print the message
-        print.game_over();
-        delay(20000);
+        if (current_time - last_game_over_time > 2000 || last_game_over_time == 0) {
+
+            // clear the board
+            matrix.fillScreen(BLACK.to_333());
+            // print the message
+            print.game_over();
+
+            last_game_over_time = current_time;
+        }
+        
 
     }
 
@@ -1547,7 +1629,9 @@ class MultiGame {
         }
 
         void setup() {
-
+            // reset finished
+            finished = false;
+              
             // initialization
             initialize_time_counter();
 
@@ -1556,12 +1640,19 @@ class MultiGame {
             // send data over the net
             cmd.start_multi_game();
 
+            // print greeting
+            print.greeting();
+
+            delay(3000);
+
+            matrix.fillScreen(BLACK.to_333());
+
             // draw
             draw_everything();
 
         }
 
-        void loop(int potentiometer_value, bool player_button_pressed, bool finish_pressed) {
+        void loop(int potentiometer_value, bool player_button_pressed) {
 
             // check if server is ready
             /*
@@ -1578,7 +1669,7 @@ class MultiGame {
             int current_time = millis();
                 
             // enable game finish
-            if (finish_pressed) {
+            if (cmd.should_finish_multi_game()) {
               
                 // finish the game
                 finished = true;
@@ -1589,6 +1680,9 @@ class MultiGame {
 
                 // print final score
                 if (last_score_time == 0) {
+
+                    // print scores
+                    matrix.fillScreen(BLACK.to_333());
 
                     print.scores(player_score, defender_score);
                   
@@ -1603,16 +1697,13 @@ class MultiGame {
 
                     last_score_time = current_time;
                 }
-                
-                // send finish info over the wires
-                cmd.finish_multi_game();
 
                 return;
               
             }
             
             // enable player control (on board)
-            if (abs(potentiometer_value - prev_potentiometer_value) > 30) {
+            if (abs(potentiometer_value - prev_potentiometer_value) > 30 || prev_potentiometer_value == 512) {
 
                 draw_player(potentiometer_value / 32);
 
@@ -1627,18 +1718,14 @@ class MultiGame {
 
                 soccer.set_initial_action_time(current_time);
 
-                last_soccer_time = current_time;
-
              }
-              
             
-
             // enable defender control (remote)
             cmd.interact_with(defender, cannon);
 
             // detect movements
             // --- soccer
-            if (soccer.ready_to_act(current_time)) {
+            if (soccer.has_been_shot() && soccer.ready_to_act(current_time)) {
 
                 soccer.move();
 
@@ -1647,7 +1734,7 @@ class MultiGame {
             }
 
             // --- cannon
-            if (cannon.ready_to_act(current_time)) {
+            if (cannon.has_been_shot() && cannon.ready_to_act(current_time)) {
 
                 cannon.move();
 
@@ -1667,11 +1754,22 @@ class MultiGame {
                 // reset soccerball
                 soccer.reset();
 
+                // redraw net
+                net.draw();
+
                 // indicate player scored
                 player_score ++;
 
                 // send score info over the wires
                 cmd.score("player");
+
+            }
+
+            // --- soccer hits defender
+            if (soccer.has_hit_defender(defender)) {
+
+                // reset soccerball
+                soccer.reset_with_color(RED);
 
             }
 
@@ -1692,6 +1790,9 @@ class MultiGame {
                 // reset cannon ball
                 cannon.reset();
 
+                // redraw player
+                player.draw();
+
                 // indicate defender goaled
                 defender_score ++;
 
@@ -1703,13 +1804,21 @@ class MultiGame {
         }
 
         bool has_been_selected () const {
+          
             return selected;
+            
         }
 
         void select() {
 
             selected = true;
       
+        }
+
+        void deselect() {
+
+            selected = false;
+          
         }
     private:
         // helpers
@@ -1748,6 +1857,8 @@ class MultiGame {
 
             cannon.set_initial_action_time(time);
 
+            net.set_initial_action_time(time);
+
         }
 
         void initialize_object_configuration() {
@@ -1755,19 +1866,22 @@ class MultiGame {
             player.allow_unlimited_shots(true);
             
             // config cannon
+            cannon.reset();
             cannon.set_speed(6);
 
             // config soccer
-            soccer.set_speed(6);
+            soccer.reset();
+            soccer.set_speed(10);
 
             // config net
+            net.reset();
             net.set_can_move(true);
             net.set_speed(4);
             net.allow_net_to_expand(true);
 
             // config defender
             defender.allow_shooting(true);
-
+            defender.set_single(true);
         }
 
         
@@ -1856,13 +1970,15 @@ class ModeSelector {
 
         void show_options() {
 
-            if (millis() - last_refreshed_option > 1000 ) {
+            int current_time = millis();
+            
+            if (current_time - last_refreshed_option > 1000 || last_refreshed_option == 0) {
 
                 matrix.fillScreen(BLACK.to_333());
                 
                 print.mode_options();
 
-                last_refreshed_option = millis();
+                last_refreshed_option = current_time;
               
             }
             
@@ -1875,32 +1991,35 @@ class ModeSelector {
             // detect potentiometer value change
             int option = potentiometer_value / 512 + 1;
 
-            if (current_time - last_refreshed_selection > 500 ) {
-
+            if (current_time - last_refreshed_selection > 500 || last_refreshed_selection == 0) {
+                
                 print.deselected();
 
                 print.selected(option);   
 
-                last_refreshed_selection = millis();
+                last_refreshed_selection = current_time;
             }
 
-            // detected button pressed action
-            if ((current_time - time > 500) && button_pressed) {
-                
-                mode = option;
-
-                time = millis();
-
+            if (button_pressed) {
+                    mode = option;
             }
-
             return mode;
 
         }
+
 
         int selected() {
 
             return mode;
 
+        }
+
+        int reset() {
+
+            mode = 0;
+
+            time = 0;
+          
         }
 
     private:
@@ -1933,17 +2052,33 @@ void setup() {
 }
 
 void loop() {
-
+    
     // prepare inputs
     int potentiometer_value = analogRead(POTENTIOMETER_PIN_NUMBER);
 
     bool button_pressed = (digitalRead(BUTTON_PIN_NUMBER) == HIGH);
 
     bool finish_pressed = (digitalRead(FINISH_PIN_NUMBER) == HIGH);
-
+    
     // check game option
     int option = select.selected();
 
+    // global restart game
+    if (Serial.available() > 0) {
+
+        if (Serial.peek() == '|') {
+
+            char c = Serial.read();
+                       
+            select = ModeSelector();
+            single_game = SingleGame();
+            multi_game = MultiGame();
+
+            option = 0;
+        }
+        
+    }
+    
     if (option == 0){
 
         // load selection screen
@@ -1962,6 +2097,8 @@ void loop() {
               single_game.select();
               single_game.setup();
               button_pressed = false;
+              Serial.print("INIT SINGLEGAME");
+
             }
             single_game.loop(potentiometer_value, button_pressed);
         break;
@@ -1973,8 +2110,9 @@ void loop() {
               multi_game.select();
               multi_game.setup();
               button_pressed = false;
+              Serial.print("INIT MULTIGAME");
             }
-            multi_game.loop(potentiometer_value, button_pressed, finish_pressed);
+            multi_game.loop(potentiometer_value, button_pressed);
         break;
 
         default:

@@ -5,6 +5,7 @@
 
 	<title>Score</title>
 	<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 	<style type="text/css">
 			
 		* { 
@@ -17,6 +18,10 @@
 			text-align:center;
 			font-family: 'Helvetica Neue', sans-serif;
 			line-height: normal !important;
+		}
+
+		a {
+			cursor: pointer;
 		}
 
 		.title h1{
@@ -197,10 +202,10 @@
 				<thead>
 					<tr>
 						<th>Battle name</th>
-						<th>Player score</th>
-						<th>Defender score</th>
-						<th>Player win rate</th>
-						<th>Defender win rate</th>
+						<th>Player scores <a v-on:click="sortBy('player_scores')"><i class="fa fa-caret-down"></i></a></th>
+						<th>Defender scores <a v-on:click="sortBy('defender_scores')"><i class="fa fa-caret-down"></i></a></th>
+						<th>Player win rate <a v-on:click="sortBy('player_win_rate')"><i class="fa fa-caret-down"></i></a></th>
+						<th>Defender win rate <a v-on:click="sortBy('defender_win_rate')"><i class="fa fa-caret-down"></i></a></th>
 					</tr>
 				</thead>
 
@@ -210,8 +215,8 @@
 					</tr>
 					<tr v-for="record in recordList">
 						<td>{{ record['battle_name'] }}</td>
-						<td>{{ record['player_score'] }}</td>
-						<td>{{ record['defender_score'] }}</td>
+						<td>{{ record['player_scores'] }}</td>
+						<td>{{ record['defender_scores'] }}</td>
 						<td>{{ record['player_win_rate'] | toPercentage }}</td>
 						<td>{{ record['defender_win_rate'] | toPercentage }}</td>
 					</tr>
@@ -257,7 +262,7 @@
 
 			}
 
-			return records;
+			return JSON.parse(records);
 
 		};
 
@@ -280,7 +285,7 @@
 				source = this.all();
 			}
 
-			var playerWinRate = parseFloat(data.playerScore / (data.playerScore + data.defenderScore));
+			var playerWinRate = (data.playerScore / (data.playerScore + data.defenderScore)).toFixed(4);
 
 			if (!playerWinRate) {
 
@@ -288,7 +293,7 @@
 
 			}
 
-			var defenderWinRate = parseFloat(data.defenderScore / (data.playerScore + data.defenderScore));
+			var defenderWinRate = (data.defenderScore / (data.playerScore + data.defenderScore)).toFixed(4);
 
 			if (!defenderWinRate) {
 
@@ -297,6 +302,8 @@
 			}
 
 			var record = {};
+
+			record['battle_name'] = data.battleName;
 
 			record[this.sort.PLAYER_SCORES] = data.playerScore;
 
@@ -316,6 +323,8 @@
 				
 			var source = this.all();
 
+
+
 			switch (key) {
 
 				case this.sort.PLAYER_SCORES:{
@@ -324,13 +333,13 @@
 
 						if (a[this.sort.PLAYER_SCORES] > b[this.sort.PLAYER_SCORES]){
 
-							return 1;
+							return -1;
 
 						}
 
 						if (a[this.sort.PLAYER_SCORES] < b[this.sort.PLAYER_SCORES]){
 
-							return -1;
+							return 1;
 
 						}
 
@@ -350,13 +359,13 @@
 
 						if (a[this.sort.DEFENDER_SCORES] > b[this.sort.DEFENDER_SCORES]){
 
-							return 1;
+							return -1;
 
 						}
 
 						if (a[this.sort.DEFENDER_SCORES] < b[this.sort.DEFENDER_SCORES]){
 
-							return -1;
+							return 1;
 
 						}
 
@@ -376,13 +385,13 @@
 
 						if (a[this.sort.PLAYER_WIN_RATE] > b[this.sort.PLAYER_WIN_RATE]){
 
-							return 1;
+							return -1;
 
 						}
 
 						if (a[this.sort.PLAYER_WIN_RATE] < b[this.sort.PLAYER_WIN_RATE]){
 
-							return -1;
+							return 1;
 
 						}
 
@@ -402,13 +411,13 @@
 
 						if (a[this.sort.DEFENDER_WIN_RATE] > b[this.sort.DEFENDER_WIN_RATE]){
 
-							return 1;
+							return -1;
 
 						}
 
 						if (a[this.sort.DEFENDER_WIN_RATE] < b[this.sort.DEFENDER_WIN_RATE]){
 
-							return -1;
+							return 1;
 
 						}
 
@@ -478,6 +487,10 @@
 
 					alert("Thanks for the input! You can compare your score with others later!");
 
+					// update data for table
+					recordsTableData.recordList = records.all();
+
+
 					// reset counter
 					resetCounter();
 				}
@@ -505,12 +518,21 @@
 
 			methods : {
 
-				toPercentage: function (value) {
+				sortBy : function (type) {
 
-					return String(value * 100) + "%";
+					this.recordList = records.sortBy(type);
 
 				}
 
+			}
+			,
+			filters : {
+
+				toPercentage: function (value) {
+
+					return String((value * 100).toFixed(2)) + "%";
+
+				}
 			}
 
 		});
@@ -527,7 +549,7 @@
 
 				defenderScore : 0,
 
-				started : true,
+				started : false,
 
 				finished : false
 
@@ -553,6 +575,10 @@
 
 		var resetCounter = function (){
 
+			$(".player .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
+
+			$(".defender .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
+
 			app.playerScore = 0;
 
 			app.defenderScore = 0;
@@ -566,6 +592,8 @@
 		// Handle counter ui 
 		var incrementPlayerScore = function () {
 
+			$(".player .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
+
 			$('.player .flip--top').addClass('animated-front');
 
 			$('.player .flip--back').addClass('animated-back');
@@ -578,8 +606,6 @@
 
 			},1000);
 
-			$(".player .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
-
 			$(".player .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function() {
 			    
 			    app.playerScore ++;
@@ -589,6 +615,8 @@
 		}
 
 		var incrementDefenderScore = function () {
+
+			$(".defender .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
 
 			$('.defender .flip--top').addClass('animated-front');
 
@@ -602,7 +630,6 @@
 
 			},1000);
 				
-			$(".defender .flip--back").off("webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration");
 
 			$(".defender .flip--back").on('webkitAnimationIteration oanimationiteration msAnimationIteration animationiteration', function(e) {
 
@@ -657,8 +684,6 @@
 			data = JSON.parse(data);
 
 			if (data['value'] != "0") {
-
-				resetCounter();
 
 				app.finished = true;
 

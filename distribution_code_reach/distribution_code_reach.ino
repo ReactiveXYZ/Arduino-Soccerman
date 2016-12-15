@@ -1093,7 +1093,7 @@ class Game {
                         defenders[i].allow_shooting(true);
                     }
 
-                    Defender::set_shooting_frequency(0.1);
+                    Defender::set_shooting_frequency(1);
                     break;
 
                 case 5:
