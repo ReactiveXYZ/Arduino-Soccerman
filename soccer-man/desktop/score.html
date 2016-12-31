@@ -204,8 +204,8 @@
 						<th>Battle name</th>
 						<th>Player scores <a v-on:click="sortBy('player_scores')"><i class="fa fa-caret-down"></i></a></th>
 						<th>Defender scores <a v-on:click="sortBy('defender_scores')"><i class="fa fa-caret-down"></i></a></th>
-						<th>Player win rate <a v-on:click="sortBy('player_win_rate')"><i class="fa fa-caret-down"></i></a></th>
-						<th>Defender win rate <a v-on:click="sortBy('defender_win_rate')"><i class="fa fa-caret-down"></i></a></th>
+						<th>Player accuracy <a v-on:click="sortBy('player_accuracy')"><i class="fa fa-caret-down"></i></a></th>
+						<th>Defender accuracy<a v-on:click="sortBy('defender_accuracy')"><i class="fa fa-caret-down"></i></a></th>
 					</tr>
 				</thead>
 
@@ -217,8 +217,8 @@
 						<td>{{ record['battle_name'] }}</td>
 						<td>{{ record['player_scores'] }}</td>
 						<td>{{ record['defender_scores'] }}</td>
-						<td>{{ record['player_win_rate'] | toPercentage }}</td>
-						<td>{{ record['defender_win_rate'] | toPercentage }}</td>
+						<td>{{ record['player_accuracy'] | toPercentage }}</td>
+						<td>{{ record['defender_accuracy'] | toPercentage }}</td>
 					</tr>
 				</tbody>
 
@@ -245,9 +245,9 @@
 
 				DEFENDER_SCORES : 'defender_scores',
 
-				PLAYER_WIN_RATE : 'player_win_rate',
+				PLAYER_ACCURACY : 'player_accuracy',
 
-				DEFENDER_WIN_RATE : 'defender_win_rate'
+				DEFENDER_ACCURACY : 'defender_accuracy'
 
 			}
 		}
@@ -285,19 +285,19 @@
 				source = this.all();
 			}
 
-			var playerWinRate = (data.playerScore / (data.playerScore + data.defenderScore)).toFixed(4);
+			var playerAccuracy = (data.playerScore / data.playerShots).toFixed(4);
 
-			if (!playerWinRate) {
+			if (!playerAccuracy) {
 
-				playerWinRate = 0;
+				playerAccuracy = 0;
 
 			}
 
-			var defenderWinRate = (data.defenderScore / (data.playerScore + data.defenderScore)).toFixed(4);
+			var defenderAccuracy = (data.defenderScore / data.defenderShots).toFixed(4);
 
-			if (!defenderWinRate) {
+			if (!defenderAccuracy) {
 
-				defenderWinRate = 0;
+				defenderAccuracy = 0;
 
 			}
 
@@ -309,9 +309,9 @@
 
 			record[this.sort.DEFENDER_SCORES] = data.defenderScore;
 
-			record[this.sort.PLAYER_WIN_RATE] = playerWinRate;
+			record[this.sort.PLAYER_ACCURACY] = playerAccuracy;
 
-			record[this.sort.DEFENDER_WIN_RATE] = defenderWinRate;
+			record[this.sort.DEFENDER_ACCURACY] = defenderAccuracy;
 
 			source.push(record);
 
@@ -322,8 +322,6 @@
 		Records.prototype.sortBy = function(key) {
 				
 			var source = this.all();
-
-
 
 			switch (key) {
 
@@ -379,17 +377,17 @@
 
 				break;
 
-				case this.sort.PLAYER_WIN_RATE: {
+				case this.sort.PLAYER_ACCURACY: {
 
 					source.sort(function (a, b) {
 
-						if (a[this.sort.PLAYER_WIN_RATE] > b[this.sort.PLAYER_WIN_RATE]){
+						if (a[this.sort.PLAYER_ACCURACY] > b[this.sort.PLAYER_ACCURACY]){
 
 							return -1;
 
 						}
 
-						if (a[this.sort.PLAYER_WIN_RATE] < b[this.sort.PLAYER_WIN_RATE]){
+						if (a[this.sort.PLAYER_ACCURACY] < b[this.sort.PLAYER_ACCURACY]){
 
 							return 1;
 
@@ -405,17 +403,17 @@
 
 				break;
 
-				case this.sort.DEFENDER_WIN_RATE: {
+				case this.sort.DEFENDER_ACCURACY: {
 
 					source.sort(function (a, b) {
 
-						if (a[this.sort.DEFENDER_WIN_RATE] > b[this.sort.DEFENDER_WIN_RATE]){
+						if (a[this.sort.DEFENDER_ACCURACY] > b[this.sort.DEFENDER_ACCURACY]){
 
 							return -1;
 
 						}
 
-						if (a[this.sort.DEFENDER_WIN_RATE] < b[this.sort.DEFENDER_WIN_RATE]){
+						if (a[this.sort.DEFENDER_ACCURACY] < b[this.sort.DEFENDER_ACCURACY]){
 
 							return 1;
 
@@ -547,7 +545,11 @@
 
 				playerScore : 0,
 
+				playerShots : 0,
+
 				defenderScore : 0,
+
+				defenderShots : 0,
 
 				started : false,
 
@@ -581,7 +583,11 @@
 
 			app.playerScore = 0;
 
+			app.playerShots = 0;
+
 			app.defenderScore = 0;
+
+			app.defenderShots = 0;
 
 			app.started = false;
 
@@ -689,7 +695,6 @@
 
 			}
 
-
 		});
 
 
@@ -700,8 +705,6 @@
 		});
 
 		socket.on('score_increment', function (data) {
-
-			console.log("Incrementing data available" + data);
 
 			data = JSON.parse(data);
 
@@ -714,6 +717,24 @@
 			if (data['player'] == 'p2') {
 
 				incrementDefenderScore();
+
+			}
+
+		});
+
+		socket.on('shot_increment', function (data) {
+
+			data = JSON.parse(data);
+
+			if (data['player'] == 'p1') {
+
+				app.playerShots ++;
+
+			}
+
+			if (data['player'] == 'p2') {
+
+				app.defenderShots ++;
 
 			}
 

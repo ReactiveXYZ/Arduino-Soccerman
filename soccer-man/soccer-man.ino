@@ -1007,142 +1007,6 @@ class Defender: public Moveable, public Drawable {
 
 int Defender::shooting_cool_down_time = 0;
 
-// Commander [ADDED IN SUPER REACH]
-class Commander {
-
-    public:
-
-        Commander() {}
-
-        void interact_with(Defender& defender, CannonBall& cannon) {
-
-            char action = this->read_message();
-
-            switch (action) {
-
-                case 'L':
-
-                    // move defender one to the left
-                    defender.erase();
-
-                    if (defender.get_x() <= 0) {
-
-                        defender.set_x(0);
-
-                    } else {
-
-                        defender.set_x(defender.get_x() - 1);
-
-                    }
-
-                    defender.draw();
-
-                    break;
-
-                case 'R':
-
-                    // move defender one to the right
-                    defender.erase();
-
-                    if (defender.get_x() >= 28) {
-
-                        defender.set_x(28);
-
-                    } else {
-
-                        defender.set_x(defender.get_x() + 1);
-
-                    }
-
-                    defender.draw();
-
-                    break;
-
-                case 'S':
-
-                    // let the defender shoot a cannonball
-                    if (!cannon.has_been_shot()) {
-
-                        defender.shoot(cannon);
-
-                    }
-
-                    break;
-
-
-                default:
-                    break;
-
-            }
-
-        }
-
-        void start_multi_game() {
-
-            Serial.write("s 1");
-
-        }
-
-        void score(String p){
-
-            if (p == "player") {
-
-                Serial.write("p p1");
-
-            }
-
-            if (p == "defender") {
-
-                Serial.write("p p2");
-
-            }
-
-        }
-
-        bool should_finish_multi_game() {
-
-            if (this->peek_message() == 'F'){
-
-                char c = this->read_message();
-
-                return true;
-            }
-
-            return false;
-        }
-
-
-    private:
-
-        char read_message() {
-
-            char ch = 'x';
-
-            if (Serial.available() > 0) {
-
-                ch = Serial.read();
-
-            }
-
-            return ch;
-
-        }
-
-        char peek_message() {
-
-            char ch = 'x';
-
-            if (Serial.available() > 0) {
-
-                ch = Serial.peek();
-
-            }
-
-            return ch;
-
-        }
-
-};
 
 const int MAX_LEVEL = 6;
 
@@ -1619,6 +1483,160 @@ class SingleGame {
 
 };
 
+// Commander [ADDED IN SUPER REACH]
+class Commander {
+
+    public:
+
+        Commander() {}
+
+        void interact_with(Defender& defender, CannonBall& cannon) {
+
+            char action = this->read_message();
+
+            switch (action) {
+
+                case 'L':
+
+                    // move defender one to the left
+                    defender.erase();
+
+                    if (defender.get_x() <= 0) {
+
+                        defender.set_x(0);
+
+                    } else {
+
+                        defender.set_x(defender.get_x() - 1);
+
+                    }
+
+                    defender.draw();
+
+                    break;
+
+                case 'R':
+
+                    // move defender one to the right
+                    defender.erase();
+
+                    if (defender.get_x() >= 28) {
+
+                        defender.set_x(28);
+
+                    } else {
+
+                        defender.set_x(defender.get_x() + 1);
+
+                    }
+
+                    defender.draw();
+
+                    break;
+
+                case 'S':
+
+                    // let the defender shoot a cannonball
+                    if (!cannon.has_been_shot()) {
+
+                        defender.shoot(cannon);
+
+                        this->shoot("defender");
+
+                    }
+
+                    break;
+
+
+                default:
+                    break;
+
+            }
+
+        }
+
+        void start_multi_game() {
+
+            Serial.write("s 1");
+
+        }
+
+        void score(String p){
+
+            if (p == "player") {
+
+                Serial.write("p p1");
+
+            }
+
+            if (p == "defender") {
+
+                Serial.write("p p2");
+
+            }
+
+        }
+
+        void shoot(String p) {
+
+            if (p == "player") {
+
+                Serial.write("o p1");
+
+            }
+
+            if (p == "defender") {
+
+                Serial.write("o p2");
+
+            }
+
+        }
+
+        bool should_finish_multi_game() {
+
+            if (this->peek_message() == 'F'){
+
+                char c = this->read_message();
+
+                return true;
+            }
+
+            return false;
+        }
+
+
+    private:
+
+        char read_message() {
+
+            char ch = 'x';
+
+            if (Serial.available() > 0) {
+
+                ch = Serial.read();
+
+            }
+
+            return ch;
+
+        }
+
+        char peek_message() {
+
+            char ch = 'x';
+
+            if (Serial.available() > 0) {
+
+                ch = Serial.peek();
+
+            }
+
+            return ch;
+
+        }
+
+};
 // Multiple player Game [ADDED IN SUPER REACH]
 class MultiGame {
 
@@ -1715,6 +1733,8 @@ class MultiGame {
             if (!soccer.has_been_shot() && player_button_pressed) {
 
                 player.shoot(soccer);
+
+                cmd.shoot("player");
 
                 soccer.set_initial_action_time(current_time);
 

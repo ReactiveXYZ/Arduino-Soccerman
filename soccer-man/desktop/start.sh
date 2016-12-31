@@ -7,4 +7,4 @@ select yn in "Yes" "No"; do
 done
 redis-server &
 gunicorn -k eventlet -w 1 server:app &
-python server_new.py
+python server.py

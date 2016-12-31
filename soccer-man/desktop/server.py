@@ -1,16 +1,16 @@
+import os
+import json
+import time
 import serial
-import sys, tty, termios
 import socketio
 import eventlet
-import json
-import os
-import time
-import threading
-import select
+import sys, tty, termios, select
 
-from multiprocessing import Process
 # serial port consts
+# modify to whatever shows up in your 
 PORT_CONTROL = "/dev/cu.usbmodem1411"
+
+REDIS_ADDR = 'redis://127.0.0.1:6379'
 PORT_TIME_OUT = 0.05
 
 # action key bindings
@@ -18,13 +18,15 @@ KEY_LEFT = 'a'
 KEY_RIGHT = 'd'
 KEY_QUIT = 'q'
 KEY_ATTACK = 'j'
+KEY_FINISH = 'f'
+KEY_RESTART = 'r'
 
 # server init
-mgr = socketio.KombuManager('redis://127.0.0.1:6379')
+mgr = socketio.KombuManager(REDIS_ADDR)
 sio = socketio.Server(async_mode='eventlet', client_manager = mgr)
 app = socketio.Middleware(sio)
 
-# game classes
+# Mock client for testing purposes
 class Mock(object):
 
 	def __init__(self):
@@ -40,6 +42,7 @@ class Mock(object):
 	def write(self, message):
 		print "Writing: " + message
 
+# Real arduino serial client
 class Client(object):
 
 	def __init__(self, port):
@@ -54,6 +57,9 @@ class Client(object):
 	def write(self, message):
 
 		self.ser.write(message)
+
+# store old terminal settings for reset input stream
+old_settings = termios.tcgetattr(sys.stdin)
 
 class Server(object):
 
@@ -74,7 +80,6 @@ class Server(object):
 		return ch
 
 	def parse_message(self, message):
-
 		comps = message.split(' ')
 
 		if len(comps) == 2:
@@ -85,8 +90,6 @@ class Server(object):
 	def init(self):
 
 		self.client.write("READY\n")
-
-		sio.emit("started", data = json.dumps({ 'value' : '1' }))
 
 
 	def receive_score_updates(self):
@@ -106,21 +109,29 @@ class Server(object):
 					# multiplayer mode finished
 					sio.emit("finished", data = json.dumps({ 'value' : msg_value }));
 
+				if msg_type == 'o':
+					# player just shot
+					sio.emit("shot_increment", data = json.dumps({ 'value' : msg_value }))
+
 				if msg_type == 'p':
 					# player has scored
 					sio.emit("score_increment", data = json.dumps({ 'player' : msg_value }))
 
-	def detect_key_presses(self):
+	def detect_key_presses(self, ch):
 			
 			# detect key presses
-			ch = self.get_ch()
-
 			if ch == KEY_LEFT:
 				self.client.write("L")
 			elif ch == KEY_RIGHT:
 				self.client.write("R")
 			elif ch == KEY_ATTACK:
 				self.client.write("S")
+			elif ch == KEY_FINISH:
+				self.client.write("F")
+				sio.emit("finished", data = json.dumps({ 'value' : '1' }));
+			elif ch == KEY_RESTART:
+				self.client.write('|')
+				sio.emit("score_reset")
 			elif ch == KEY_QUIT:
 				# terminal game
 				self.client.write("Q")
@@ -129,6 +140,8 @@ class Server(object):
 				os.system("lsof -i tcp:6379 | grep redis-ser | grep -v grep | awk '{print $2}' | xargs kill")
 				# terminate gunicorn server
 				os.system("lsof -i tcp:8000 | grep Python | grep -v grep | awk '{print $2}' | xargs kill");
+				# reset terminal settings
+				termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 				# clear mess
 				print(chr(27) + "[2J")
 				os.system('cls' if os.name == 'nt' else 'clear')
@@ -136,20 +149,11 @@ class Server(object):
 				print "Quiting..."
 				exit()
 
-	def start_communication(self):
-		
-		# detect key presses
-		self.detect_key_presses()
-		# spawn the socket on a separate process
-		# p = Process(target=self.receive_score_updates)
-		# p.start()
-		# detect score changes
-		self.receive_score_updates()
-		
-
-
-		
+# initialized server
 server = Server()
+
+def has_incoming_input():
+    return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
 if __name__ == '__main__':
 
@@ -157,5 +161,15 @@ if __name__ == '__main__':
 	server.init()
 
 	# start communicating
-	while True:
-		server.start_communication()
+	try:
+		tty.setcbreak(sys.stdin.fileno())
+
+		while True:
+			
+			server.receive_score_updates()
+
+			if has_incoming_input():
+				c = sys.stdin.read(1)
+				server.detect_key_presses(c)
+	finally:
+		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
